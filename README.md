@@ -1,6 +1,6 @@
 # httptesting
 
-This package somewhat simplifies http endpoint testing
+This package somewhat simplifies http endpoint testing, by writing a chitchat.md with all endpoints called in your tests along with their request/response payloads, making it easy to create README.md.
 
 # Installing
 `go get -u github.com/shoorikl/httptesting`
