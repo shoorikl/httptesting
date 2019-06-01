@@ -1,4 +1,4 @@
-package gintesting
+package httptesting
 
 import (
 	"bytes"
