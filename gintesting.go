@@ -13,7 +13,7 @@ import (
 
 var file *os.File
 
-func prepare() {
+func Prepare() {
 	var err error
 	file, err = os.Create("chitchat.md")
 	if err != nil {
@@ -21,13 +21,13 @@ func prepare() {
 	}
 }
 
-func teardown() {
+func Teardown() {
 	if file != nil {
 		file.Close()
 	}
 }
 
-func performRequest(r http.Handler, method, path string) *httptest.ResponseRecorder {
+func PerformRequest(r http.Handler, method, path string) *httptest.ResponseRecorder {
 	req, _ := http.NewRequest(method, path, nil)
 
 	w := httptest.NewRecorder()
@@ -39,7 +39,7 @@ func performRequest(r http.Handler, method, path string) *httptest.ResponseRecor
 	return w
 }
 
-func performRequestWithBody(r http.Handler, method, path string, body interface{}) *httptest.ResponseRecorder {
+func PerformRequestWithBody(r http.Handler, method, path string, body interface{}) *httptest.ResponseRecorder {
 	jsonDoc, err := json.MarshalIndent(body, "", "\t")
 	if err != nil {
 		log.Fatal(err)
@@ -58,7 +58,7 @@ func performRequestWithBody(r http.Handler, method, path string, body interface{
 	return w
 }
 
-func unwrapResponse(t *testing.T, w *httptest.ResponseRecorder, expectedStatus string) map[string]interface{} {
+func UnwrapResponse(t *testing.T, w *httptest.ResponseRecorder, expectedStatus string) map[string]interface{} {
 	var response map[string]interface{}
 	fmt.Printf("Response: %s\n", w.Body.String())
 
