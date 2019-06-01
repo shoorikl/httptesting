@@ -1,7 +1,7 @@
 
 * GET `/test` Test GET Endpoint
 
-Response:
+Response (200):
 ```json
 {
 	"Status": "OK"
@@ -17,9 +17,25 @@ Request:
 }
 ```
 
-Response:
+Response (200):
 ```json
 {
 	"Status": "HELLO"
 }
+```
+
+* GET `/param/:value` Test GET Endpoint with route param
+
+Response (200):
+```json
+{
+	"Status": "somevalue"
+}
+```
+
+* PUT `/invalidpath` Test Invalid PUT request
+
+Response (404):
+```text
+
 ```

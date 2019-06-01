@@ -1,6 +1,6 @@
 # httptesting
 
-This package somewhat simplifies Golang Gin http endpoint documentation, by writing a markdown file with all endpoints called in your tests along with their request/response payloads, making it easy to create README.md.
+Restful API markdown logging middleware for Golang Gin http routing framework.
 
 # Conventions
 
@@ -13,12 +13,20 @@ By design, every endpoint has a mandatory `Status` response filed, which conveys
 In you test package, add
 
 ```go
+var r *gin.Engine = createRouter()
+
 func TestMain(m *testing.M) {
 
-	httptesting.Prepare("chitchat.md")
+	Prepare("chitchat.md")
 	code := m.Run()
-	httptesting.Teardown()
+	Teardown()
 	os.Exit(code)
+}
+
+func createRouter() *gin.Engine {
+	r := gin.Default()
+	r.Use(MarkdownDebugLogger())
+	return r
 }
 ```
 
@@ -28,10 +36,10 @@ func TestMain(m *testing.M) {
 	req := gin.H{"Status": "HELLO"}
 	r := createRouter()
 	w := PerformRequest(r, HttpRequest{Method: "POST", Path: "/echo", Description: "Test POST Endpoint", Body: req})
-	UnwrapResponse(t, w, "HELLO")
+	AssertResponseStatus(t, w, "HELLO")
 ```
 
-This will execute a POST call to /echo, and assert the Status field of the response payload.
+This will execute a POST call to /echo, and assert the Status field of the response payload. When running `go test`, a `chitchat.md` file will be created with all request-response examples.
 
 # Outcome
 
@@ -42,7 +50,7 @@ Below is a sample from this project:
 
 * GET `/test` Test GET Endpoint
 
-Response:
+Response (200):
 ```json
 {
 	"Status": "OK"
@@ -58,9 +66,25 @@ Request:
 }
 ```
 
-Response:
+Response (200):
 ```json
 {
 	"Status": "HELLO"
 }
+```
+
+* GET `/param/:value` Test GET Endpoint with route param
+
+Response (200):
+```json
+{
+	"Status": "somevalue"
+}
+```
+
+* PUT `/invalidpath` Test Invalid PUT request
+
+Response (404):
+```text
+
 ```
