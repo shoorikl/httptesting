@@ -35,7 +35,9 @@ func (w WriterWrapper) Write(b []byte) (int, error) {
 
 var file *os.File
 
-func Prepare(filename string) {
+func Prepare(r *gin.Engine, filename string) {
+	r.Use(MarkdownDebugLogger())
+
 	if len(strings.TrimSpace(filename)) > 0 {
 		var err error
 		file, err = os.Create(filename)
@@ -54,10 +56,16 @@ func Teardown() {
 	}
 }
 
+func RegisterMarkdownDebugLogger(r *gin.Engine) {
+	if len(r.Routes()) > 0 {
+		fmt.Printf("ERROR: RegisterMarkdownDebugLogger() should be called before any other routes are registered\n")
+	}
+	r.Use(MarkdownDebugLogger())
+}
+
 func MarkdownDebugLogger() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if file != nil {
-
 			url := c.Request.URL.String()
 			for _, p := range c.Params {
 				url = strings.Replace(url, p.Value, ":"+p.Key, 1)
@@ -129,6 +137,12 @@ func PerformRequest(r *gin.Engine, request HttpRequest) *httptest.ResponseRecord
 	r.ServeHTTP(w, req)
 
 	return w
+}
+
+func AssertStatusCode(t *testing.T, w *httptest.ResponseRecorder, expectedStatusCode int) {
+	if w.Code != expectedStatusCode {
+		t.Errorf("Unexpected status code: %d\n", w.Code)
+	}
 }
 
 func AssertResponseStatus(t *testing.T, w *httptest.ResponseRecorder, expectedStatus string) map[string]interface{} {

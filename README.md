@@ -13,19 +13,19 @@ By design, every endpoint has a mandatory `Status` response filed, which conveys
 In you test package, add
 
 ```go
-var r *gin.Engine = createRouter()
+var r = createRouter()
 
 func TestMain(m *testing.M) {
 
-	Prepare("chitchat.md")
+	httptesting.Prepare("chitchat.md")
 	code := m.Run()
-	Teardown()
+	httptesting.Teardown()
 	os.Exit(code)
 }
 
 func createRouter() *gin.Engine {
 	r := gin.Default()
-	r.Use(MarkdownDebugLogger())
+	httptesting.RegisterMarkdownDebugLogger(r)
 	return r
 }
 ```
@@ -34,7 +34,7 @@ func createRouter() *gin.Engine {
 
 ```
 	req := gin.H{"Status": "HELLO"}
-	r := createRouter()
+	r := createRouter() // initialize gin.Engine
 	w := PerformRequest(r, HttpRequest{Method: "POST", Path: "/echo", Description: "Test POST Endpoint", Body: req})
 	AssertResponseStatus(t, w, "HELLO")
 ```
@@ -82,9 +82,19 @@ Response (200):
 }
 ```
 
-* PUT `/invalidpath` Test Invalid PUT request
+* PUT `/param/:value` Test PUT Endpoint with route param
 
-Response (404):
-```text
-
+Request:
+```json
+{
+	"Status": "HELLO"
+}
 ```
+
+Response (200):
+```json
+{
+	"Status": "somevalue"
+}
+```
+

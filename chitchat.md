@@ -33,9 +33,18 @@ Response (200):
 }
 ```
 
-* PUT `/invalidpath` Test Invalid PUT request
+* PUT `/param/:value` Test PUT Endpoint with route param
 
-Response (404):
-```text
+Request:
+```json
+{
+	"Status": "HELLO"
+}
+```
 
+Response (200):
+```json
+{
+	"Status": "somevalue"
+}
 ```

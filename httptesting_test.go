@@ -12,11 +12,11 @@ type RequestType struct {
 	Status string `json:"Status"`
 }
 
-var r *gin.Engine = createRouter()
+var r = createRouter()
 
 func TestMain(m *testing.M) {
 
-	Prepare("chitchat.md")
+	Prepare(r, "chitchat.md")
 	code := m.Run()
 	Teardown()
 	os.Exit(code)
@@ -41,15 +41,15 @@ func TestGETRouteParamRequest(t *testing.T) {
 	AssertResponseStatus(t, w, "somevalue")
 }
 
-func TestInvalidPUTRequest(t *testing.T) {
-
-	w := PerformRequest(r, HttpRequest{Method: "PUT", Path: "/invalidpath", Description: "Test Invalid PUT request"})
-	AssertResponseStatus(t, w, "OK")
+func TestPUTRouteParamRequest(t *testing.T) {
+	req := gin.H{"Status": "HELLO"}
+	w := PerformRequest(r, HttpRequest{Method: "PUT", Path: "/param/somevalue", Description: "Test PUT Endpoint with route param", Body: req})
+	AssertResponseStatus(t, w, "somevalue")
 }
 
 func createRouter() *gin.Engine {
 	r := gin.Default()
-	r.Use(MarkdownDebugLogger())
+	RegisterMarkdownDebugLogger(r)
 
 	r.GET("/test", func(c *gin.Context) {
 		c.JSON(200, gin.H{
@@ -57,6 +57,11 @@ func createRouter() *gin.Engine {
 	})
 
 	r.GET("/param/:value", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"Status": c.Param("value")})
+	})
+
+	r.PUT("/param/:value", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"Status": c.Param("value")})
 	})
