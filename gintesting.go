@@ -35,8 +35,8 @@ func (w WriterWrapper) Write(b []byte) (int, error) {
 
 var file *os.File
 
-func Prepare(r *gin.Engine, filename string) {
-	r.Use(MarkdownDebugLogger())
+func Prepare(filename string) {
+	// Don't foget to call r.Use(MarkdownDebugLogger())
 
 	if len(strings.TrimSpace(filename)) > 0 {
 		var err error
