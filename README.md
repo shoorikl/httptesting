@@ -35,7 +35,8 @@ func createRouter() *gin.Engine {
 ```
 	req := gin.H{"Status": "HELLO"}
 	r := createRouter() // initialize gin.Engine
-	w := PerformRequest(r, HttpRequest{Method: "POST", Path: "/echo", Description: "Test POST Endpoint", Body: req})
+	...
+	w := httptesting.PerformRequest(r, httptesting.HttpRequest{Method: "POST", Path: "/echo", Description: "Test POST Endpoint", Body: req})
 	AssertResponseStatus(t, w, "HELLO")
 ```
 

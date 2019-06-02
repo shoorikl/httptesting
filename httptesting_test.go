@@ -16,7 +16,7 @@ var r = createRouter()
 
 func TestMain(m *testing.M) {
 
-	Prepare(r, "chitchat.md")
+	Prepare("chitchat.md")
 	code := m.Run()
 	Teardown()
 	os.Exit(code)
