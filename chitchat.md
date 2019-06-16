@@ -1,7 +1,9 @@
 
 * GET `/test` Test GET Endpoint
 
-Response (200):
+   Header: `Content-Type`: `application/json`
+
+   Response (200):
 ```json
 {
 	"Status": "OK"
@@ -10,14 +12,17 @@ Response (200):
 
 * POST `/echo` Test POST Endpoint
 
-Request:
+   Header: `Content-Type`: `application/json`
+   Header: `Token`: `123`
+
+   Request:
 ```json
 {
 	"Status": "HELLO"
 }
 ```
 
-Response (200):
+   Response (200):
 ```json
 {
 	"Status": "HELLO"
@@ -26,7 +31,9 @@ Response (200):
 
 * GET `/param/:value` Test GET Endpoint with route param
 
-Response (200):
+   Header: `Content-Type`: `application/json`
+
+   Response (200):
 ```json
 {
 	"Status": "somevalue"
@@ -35,14 +42,16 @@ Response (200):
 
 * PUT `/param/:value` Test PUT Endpoint with route param
 
-Request:
+   Header: `Content-Type`: `application/json`
+
+   Request:
 ```json
 {
 	"Status": "HELLO"
 }
 ```
 
-Response (200):
+   Response (200):
 ```json
 {
 	"Status": "somevalue"
