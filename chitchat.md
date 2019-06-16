@@ -3,7 +3,7 @@
 
    Header: `Content-Type`: `application/json`
 
-Response (200):
+   Response (200):
 ```json
 {
 	"Status": "OK"
@@ -15,14 +15,14 @@ Response (200):
    Header: `Content-Type`: `application/json`
    Header: `Token`: `123`
 
-Request:
+   Request:
 ```json
 {
 	"Status": "HELLO"
 }
 ```
 
-Response (200):
+   Response (200):
 ```json
 {
 	"Status": "HELLO"
@@ -33,7 +33,7 @@ Response (200):
 
    Header: `Content-Type`: `application/json`
 
-Response (200):
+   Response (200):
 ```json
 {
 	"Status": "somevalue"
@@ -44,14 +44,14 @@ Response (200):
 
    Header: `Content-Type`: `application/json`
 
-Request:
+   Request:
 ```json
 {
 	"Status": "HELLO"
 }
 ```
 
-Response (200):
+   Response (200):
 ```json
 {
 	"Status": "somevalue"

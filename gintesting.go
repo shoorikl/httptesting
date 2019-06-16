@@ -90,7 +90,7 @@ func MarkdownDebugLogger() gin.HandlerFunc {
 			requestBody := parseBody(reader1)
 
 			if file != nil && len(description) > 0 {
-				file.WriteString(fmt.Sprintf("\nRequest:\n```json\n%s\n```\n", requestBody))
+				file.WriteString(fmt.Sprintf("\n   Request:\n```json\n%s\n```\n", requestBody))
 			}
 
 			c.Request.Body = reader2
@@ -107,12 +107,12 @@ func MarkdownDebugLogger() gin.HandlerFunc {
 		if err != nil {
 			fmt.Errorf("Unable to parse the json response %d\n", err)
 			if file != nil && len(description) > 0 {
-				file.WriteString(fmt.Sprintf("\nResponse (%d):\n```text\n%s\n```\n", c.Writer.Status(), body))
+				file.WriteString(fmt.Sprintf("\n   Response (%d):\n```text\n%s\n```\n", c.Writer.Status(), body))
 			}
 		} else {
 			jsonDoc, _ := json.MarshalIndent(response, "", "\t")
 			if file != nil && len(description) > 0 {
-				file.WriteString(fmt.Sprintf("\nResponse (%d):\n```json\n%s\n```\n", c.Writer.Status(), jsonDoc))
+				file.WriteString(fmt.Sprintf("\n   Response (%d):\n```json\n%s\n```\n", c.Writer.Status(), jsonDoc))
 			}
 		}
 
