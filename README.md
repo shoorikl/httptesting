@@ -49,7 +49,9 @@ By running `go test` on a test package that is instrumented with httptest, you w
 Below is a sample from this project:
 
 
+
 * GET `/test` Test GET Endpoint
+
    Header: `Content-Type`: `application/json`
 
 Response (200):
@@ -60,6 +62,7 @@ Response (200):
 ```
 
 * POST `/echo` Test POST Endpoint
+
    Header: `Content-Type`: `application/json`
    Header: `Token`: `123`
 
@@ -78,6 +81,7 @@ Response (200):
 ```
 
 * GET `/param/:value` Test GET Endpoint with route param
+
    Header: `Content-Type`: `application/json`
 
 Response (200):
@@ -88,6 +92,7 @@ Response (200):
 ```
 
 * PUT `/param/:value` Test PUT Endpoint with route param
+
    Header: `Content-Type`: `application/json`
 
 Request:

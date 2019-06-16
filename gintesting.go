@@ -73,7 +73,7 @@ func MarkdownDebugLogger() gin.HandlerFunc {
 				url = strings.Replace(url, p.Value, ":"+p.Key, 1)
 			}
 
-			file.WriteString(fmt.Sprintf("\n* %s `%s` %s\n", c.Request.Method, url, description))
+			file.WriteString(fmt.Sprintf("\n* %s `%s` %s\n\n", c.Request.Method, url, description))
 			for k, v := range c.Request.Header {
 				for _, v1 := range v {
 					if "__httptesting_desc" != k {
