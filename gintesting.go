@@ -77,7 +77,7 @@ func MarkdownDebugLogger() gin.HandlerFunc {
 			for k, v := range c.Request.Header {
 				for _, v1 := range v {
 					if "__httptesting_desc" != k {
-						file.WriteString(fmt.Sprintf("- Header: `%s`: `%s`\n", k, v1))
+						file.WriteString(fmt.Sprintf("   Header: `%s`: `%s`\n", k, v1))
 					}
 				}
 			}
