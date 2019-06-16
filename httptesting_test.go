@@ -31,7 +31,7 @@ func TestGETRequest(t *testing.T) {
 func TestPOSTRequest(t *testing.T) {
 
 	req := gin.H{"Status": "HELLO"}
-	w := PerformRequest(r, HttpRequest{Method: "POST", Path: "/echo", Description: "Test POST Endpoint", Body: req})
+	w := PerformRequest(r, HttpRequest{Method: "POST", Path: "/echo", Description: "Test POST Endpoint", Body: req, Headers: map[string]string{"Token": "123"}})
 	AssertResponseStatus(t, w, "HELLO")
 }
 

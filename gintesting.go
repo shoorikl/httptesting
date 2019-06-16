@@ -22,6 +22,7 @@ type HttpRequest struct {
 	Body        interface{}
 	Payload     string
 	Description string
+	Headers     map[string]string
 }
 type WriterWrapper struct {
 	gin.ResponseWriter
@@ -65,13 +66,21 @@ func RegisterMarkdownDebugLogger(r *gin.Engine) {
 
 func MarkdownDebugLogger() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if file != nil {
+		description := c.Request.Header["__httptesting_desc"][0]
+		if file != nil && len(description) > 0 {
 			url := c.Request.URL.String()
 			for _, p := range c.Params {
 				url = strings.Replace(url, p.Value, ":"+p.Key, 1)
 			}
 
-			file.WriteString(fmt.Sprintf("\n* %s `%s` %s\n", c.Request.Method, url, c.Request.Header["__httptesting_desc"][0]))
+			file.WriteString(fmt.Sprintf("\n* %s `%s` %s\n", c.Request.Method, url, description))
+			for k, v := range c.Request.Header {
+				for _, v1 := range v {
+					if "__httptesting_desc" != k {
+						file.WriteString(fmt.Sprintf("- Header: `%s`: `%s`\n", k, v1))
+					}
+				}
+			}
 		}
 
 		if c.Request.Body != nil {
@@ -80,7 +89,7 @@ func MarkdownDebugLogger() gin.HandlerFunc {
 			reader2 := ioutil.NopCloser(bytes.NewBuffer(buf))
 			requestBody := parseBody(reader1)
 
-			if file != nil {
+			if file != nil && len(description) > 0 {
 				file.WriteString(fmt.Sprintf("\nRequest:\n```json\n%s\n```\n", requestBody))
 			}
 
@@ -97,10 +106,12 @@ func MarkdownDebugLogger() gin.HandlerFunc {
 		err := json.Unmarshal([]byte(body), &response)
 		if err != nil {
 			fmt.Errorf("Unable to parse the json response %d\n", err)
-			file.WriteString(fmt.Sprintf("\nResponse (%d):\n```text\n%s\n```\n", c.Writer.Status(), body))
+			if file != nil && len(description) > 0 {
+				file.WriteString(fmt.Sprintf("\nResponse (%d):\n```text\n%s\n```\n", c.Writer.Status(), body))
+			}
 		} else {
 			jsonDoc, _ := json.MarshalIndent(response, "", "\t")
-			if file != nil {
+			if file != nil && len(description) > 0 {
 				file.WriteString(fmt.Sprintf("\nResponse (%d):\n```json\n%s\n```\n", c.Writer.Status(), jsonDoc))
 			}
 		}
@@ -132,6 +143,11 @@ func PerformRequest(r *gin.Engine, request HttpRequest) *httptest.ResponseRecord
 	req, _ := http.NewRequest(request.Method, request.Path, body)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("__httptesting_desc", request.Description)
+	if request.Headers != nil {
+		for k, v := range request.Headers {
+			req.Header.Set(k, v)
+		}
+	}
 
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
