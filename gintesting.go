@@ -3,6 +3,7 @@ package httptesting
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -171,7 +172,10 @@ func AssertResponseStatus(t *testing.T, w *httptest.ResponseRecorder, expectedSt
 	}
 
 	if response["Status"] != expectedStatus {
-		t.Errorf("Unexpected status: %s\n", response["Status"])
+		fmt.Printf("Response: %s\n", w.Body.String())
+		errorMessage := fmt.Sprintf("Unexpected status: %s, should be %s\n", response["Status"], expectedStatus)
+		t.Error(errorMessage)
+		panic(errors.New(errorMessage))
 	}
 	return response
 }
