@@ -8,7 +8,7 @@ import (
 	"github.com/elliotchance/orderedmap"
 )
 
-type SqlBuilder struct {
+type PostgresSqlBuilder struct {
 	insertFlag      bool
 	updateFlag      bool
 	deleteFlag      bool
@@ -23,10 +23,10 @@ type SqlBuilder struct {
 	buffer          StringBuilder
 }
 
-// sqlBuilder ;= SqlBuilder{}
-// sqlBuilder.Insert("table1").Set(map[string]interface{}{"param1": 1, "param2": true}).String()
+// PostgresSqlBuilder ;= PostgresSqlBuilder{}
+// PostgresSqlBuilder.Insert("table1").Set(map[string]interface{}{"param1": 1, "param2": true}).String()
 
-func (s *SqlBuilder) Insert(tableName string) *SqlBuilder {
+func (s *PostgresSqlBuilder) Insert(tableName string) *PostgresSqlBuilder {
 	s.tableName = tableName
 	s.insertFlag = true
 	s.setParams = orderedmap.NewOrderedMap()
@@ -39,7 +39,7 @@ func (s *SqlBuilder) Insert(tableName string) *SqlBuilder {
 	return s
 }
 
-func (s *SqlBuilder) Delete(tableName string) *SqlBuilder {
+func (s *PostgresSqlBuilder) Delete(tableName string) *PostgresSqlBuilder {
 	s.tableName = tableName
 	s.deleteFlag = true
 	s.whereParams = orderedmap.NewOrderedMap()
@@ -50,7 +50,7 @@ func (s *SqlBuilder) Delete(tableName string) *SqlBuilder {
 	return s
 }
 
-func (s *SqlBuilder) Update(tableName string) *SqlBuilder {
+func (s *PostgresSqlBuilder) Update(tableName string) *PostgresSqlBuilder {
 	s.tableName = tableName
 	s.updateFlag = true
 	s.setParams = orderedmap.NewOrderedMap()
@@ -63,7 +63,7 @@ func (s *SqlBuilder) Update(tableName string) *SqlBuilder {
 	return s
 }
 
-func (s *SqlBuilder) Select(tableName string) *SqlBuilder {
+func (s *PostgresSqlBuilder) Select(tableName string) *PostgresSqlBuilder {
 
 	s.tableName = strings.TrimSpace(tableName)
 	s.selectFlag = true
@@ -76,32 +76,32 @@ func (s *SqlBuilder) Select(tableName string) *SqlBuilder {
 	return s
 }
 
-func (s *SqlBuilder) Where(params *orderedmap.OrderedMap) *SqlBuilder {
+func (s *PostgresSqlBuilder) Where(params *orderedmap.OrderedMap) *PostgresSqlBuilder {
 	s.whereParams = params
 	return s
 }
 
-func (s *SqlBuilder) WhereArg(param string, value interface{}) *SqlBuilder {
+func (s *PostgresSqlBuilder) WhereArg(param string, value interface{}) *PostgresSqlBuilder {
 	s.whereParams.Set(param, value)
 	return s
 }
 
-func (s *SqlBuilder) Set(params *orderedmap.OrderedMap) *SqlBuilder {
+func (s *PostgresSqlBuilder) Set(params *orderedmap.OrderedMap) *PostgresSqlBuilder {
 	s.setParams = params
 	return s
 }
 
-func (s *SqlBuilder) SetArg(param string, value interface{}) *SqlBuilder {
+func (s *PostgresSqlBuilder) SetArg(param string, value interface{}) *PostgresSqlBuilder {
 	s.setParams.Set(param, value)
 	return s
 }
 
-func (s *SqlBuilder) Returning(params ...string) *SqlBuilder {
+func (s *PostgresSqlBuilder) Returning(params ...string) *PostgresSqlBuilder {
 	s.returningParams = params
 	return s
 }
 
-func buildValuesClause(s *SqlBuilder) string {
+func buildValuesClause(s *PostgresSqlBuilder) string {
 	sb := StringBuilder{}
 	sb1 := StringBuilder{}
 
@@ -134,7 +134,7 @@ func buildValuesClause(s *SqlBuilder) string {
 	return sb.String()
 }
 
-func buildSetClause(s *SqlBuilder) string {
+func buildSetClause(s *PostgresSqlBuilder) string {
 	sb := StringBuilder{}
 
 	if s.setParams.Len() == 0 {
@@ -161,7 +161,7 @@ func buildSetClause(s *SqlBuilder) string {
 	return sb.String()
 }
 
-func buildWhereClause(s *SqlBuilder) string {
+func buildWhereClause(s *PostgresSqlBuilder) string {
 	sb := StringBuilder{}
 
 	if s.whereParams.Len() == 0 {
@@ -189,7 +189,7 @@ func buildWhereClause(s *SqlBuilder) string {
 	return sb.String()
 }
 
-func buildReturnClause(s *SqlBuilder) string {
+func buildReturnClause(s *PostgresSqlBuilder) string {
 	sb := StringBuilder{}
 
 	if len(s.returningParams) > 0 {
@@ -203,7 +203,7 @@ func buildReturnClause(s *SqlBuilder) string {
 	return sb.String()
 }
 
-func buildSelectClause(s *SqlBuilder) string {
+func buildSelectClause(s *PostgresSqlBuilder) string {
 	sb := StringBuilder{}
 
 	if len(s.returningParams) == 0 {
@@ -221,7 +221,7 @@ func buildSelectClause(s *SqlBuilder) string {
 	return sb.String()
 }
 
-func (s *SqlBuilder) Build() (string, []interface{}, []string, error) {
+func (s *PostgresSqlBuilder) Build() (string, []interface{}, []string, error) {
 	if s.selectFlag {
 		s.buffer.Write("SELECT ", buildSelectClause(s), " FROM ", s.tableName, " ")
 		s.buffer.Write("WHERE ")

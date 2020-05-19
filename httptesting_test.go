@@ -83,7 +83,7 @@ func createRouter() *gin.Engine {
 }
 
 func TestSelectStatement(t *testing.T) {
-	sb := SqlBuilder{}
+	sb := PostgresSqlBuilder{}
 	query, inArgs, outArgs, err := sb.Select("mytable").Returning("firstname", "lastname").WhereArg("customerid", 5).WhereArg("accounttype", "seller").WhereArg("active", true).Build()
 
 	if err != nil {
@@ -106,7 +106,7 @@ func TestSelectStatement(t *testing.T) {
 }
 
 func TestSelectStatementError(t *testing.T) {
-	sb := SqlBuilder{}
+	sb := PostgresSqlBuilder{}
 	_, _, _, err := sb.Select("").Returning("firstname", "lastname").WhereArg("customerid", 5).WhereArg("accounttype", "seller").WhereArg("active", true).Build()
 
 	if err == nil {
@@ -128,7 +128,7 @@ func TestSelectStatementError(t *testing.T) {
 }
 
 func TestInsertStatement(t *testing.T) {
-	sb := SqlBuilder{}
+	sb := PostgresSqlBuilder{}
 	query, inArgs, outArgs, err := sb.Insert("mytable").Returning("id").SetArg("lifetimevalue", 100).SetArg("customerid", 5).SetArg("accounttype", "seller").SetArg("active", true).Build()
 
 	if err != nil {
@@ -151,7 +151,7 @@ func TestInsertStatement(t *testing.T) {
 }
 
 func TestUpdateStatement(t *testing.T) {
-	sb := SqlBuilder{}
+	sb := PostgresSqlBuilder{}
 	query, inArgs, outArgs, err := sb.Update("mytable").Returning("id").SetArg("lifetimevalue", 100).SetArg("active", false).WhereArg("customerid", 5).WhereArg("accounttype", "seller").WhereArg("active", true).Build()
 
 	if err != nil {
@@ -173,8 +173,31 @@ func TestUpdateStatement(t *testing.T) {
 	t.Logf("In Args: %v\n", inArgs)
 }
 
+func TestUpdateStatementNoReturning(t *testing.T) {
+	sb := PostgresSqlBuilder{}
+	query, inArgs, outArgs, err := sb.Update("mytable").SetArg("lifetimevalue", 100).SetArg("active", false).WhereArg("customerid", 5).WhereArg("accounttype", "seller").WhereArg("active", true).Build()
+
+	if err != nil {
+		t.Errorf("Cannot create query: %s", err.Error())
+	}
+
+	if query != "UPDATE mytable lifetimevalue=$1,active=$2 WHERE customerid=$3 AND accounttype=$4 AND active=$5" {
+		t.Errorf("Mismatching query: %s\n", query)
+	}
+
+	if len(inArgs) != 5 {
+		t.Errorf("Should take 5 value arguments: %v", inArgs)
+	}
+
+	if len(outArgs) != 0 {
+		t.Errorf("Should return 0 parameters: %v", outArgs)
+	}
+
+	t.Logf("In Args: %v\n", inArgs)
+}
+
 func TestDeleteStatement(t *testing.T) {
-	sb := SqlBuilder{}
+	sb := PostgresSqlBuilder{}
 	query, inArgs, outArgs, err := sb.Delete("mytable").Returning("id").WhereArg("customerid", 5).WhereArg("accounttype", "seller").WhereArg("active", true).Build()
 
 	if err != nil {
@@ -197,7 +220,7 @@ func TestDeleteStatement(t *testing.T) {
 }
 
 func TestDeleteStatementNoReturning(t *testing.T) {
-	sb := SqlBuilder{}
+	sb := PostgresSqlBuilder{}
 	query, inArgs, outArgs, err := sb.Delete("mytable").WhereArg("customerid", 5).WhereArg("accounttype", "seller").WhereArg("active", true).Build()
 
 	if err != nil {
@@ -213,7 +236,7 @@ func TestDeleteStatementNoReturning(t *testing.T) {
 	}
 
 	if len(outArgs) != 0 {
-		t.Errorf("Should return 0 parameter: %v", outArgs)
+		t.Errorf("Should return 0 parameters: %v", outArgs)
 	}
 
 	t.Logf("In Args: %v\n", inArgs)
