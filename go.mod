@@ -1,4 +1,4 @@
-module github.com/shoorkil/httptesting
+module github.com/shoorikl/httptesting
 
 go 1.14
 
