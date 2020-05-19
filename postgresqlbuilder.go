@@ -19,6 +19,7 @@ type PostgresSqlBuilder struct {
 	argumentNames   []string
 	argumentValues  []interface{}
 	returningParams []string
+	limit           int
 	err             error
 	buffer          StringBuilder
 }
@@ -98,6 +99,11 @@ func (s *PostgresSqlBuilder) SetArg(param string, value interface{}) *PostgresSq
 
 func (s *PostgresSqlBuilder) Returning(params ...string) *PostgresSqlBuilder {
 	s.returningParams = params
+	return s
+}
+
+func (s *PostgresSqlBuilder) Limit(limit int) *PostgresSqlBuilder {
+	s.limit = limit
 	return s
 }
 
@@ -221,11 +227,25 @@ func buildSelectClause(s *PostgresSqlBuilder) string {
 	return sb.String()
 }
 
+func buildLimitClause(s *PostgresSqlBuilder) string {
+	sb := StringBuilder{}
+
+	if !s.selectFlag {
+		s.err = errors.New("Limit clause only supported for select")
+	}
+
+	if s.limit > 0 {
+		sb.Write(" LIMIT ").Write(strconv.Itoa(s.limit))
+	}
+	return sb.String()
+}
+
 func (s *PostgresSqlBuilder) Build() (string, []interface{}, []string, error) {
 	if s.selectFlag {
 		s.buffer.Write("SELECT ", buildSelectClause(s), " FROM ", s.tableName, " ")
 		s.buffer.Write("WHERE ")
 		s.buffer.Write(buildWhereClause(s))
+		s.buffer.Write(buildLimitClause(s))
 	} else if s.insertFlag {
 		s.buffer.Write("INSERT INTO ", s.tableName, " ")
 		s.buffer.Write(buildValuesClause(s))
