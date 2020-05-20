@@ -293,7 +293,7 @@ func (s *PostgresSqlBuilder) Build() (string, []interface{}, []string, error) {
 		}
 	} else if s.updateFlag {
 
-		s.buffer.Write("UPDATE ", s.tableName, " ")
+		s.buffer.Write("UPDATE ", s.tableName, " SET ")
 		s.buffer.Write(buildSetClause(s))
 		s.buffer.Write(" WHERE ")
 		s.buffer.Write(buildWhereClause(s))

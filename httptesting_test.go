@@ -204,7 +204,7 @@ func TestUpdateStatement(t *testing.T) {
 		t.Errorf("Cannot create query: %s", err.Error())
 	}
 
-	if query != "UPDATE mytable lifetimevalue=$1,active=$2 WHERE customerid=$3 AND accounttype=$4 AND active=$5 RETURNING id" {
+	if query != "UPDATE mytable SET lifetimevalue=$1,active=$2 WHERE customerid=$3 AND accounttype=$4 AND active=$5 RETURNING id" {
 		t.Errorf("Mismatching query: %s\n", query)
 	}
 
@@ -227,7 +227,7 @@ func TestUpdateStatementNoReturning(t *testing.T) {
 		t.Errorf("Cannot create query: %s", err.Error())
 	}
 
-	if query != "UPDATE mytable lifetimevalue=$1,active=$2 WHERE customerid=$3 AND accounttype=$4 AND active=$5" {
+	if query != "UPDATE mytable SET lifetimevalue=$1,active=$2 WHERE customerid=$3 AND accounttype=$4 AND active=$5" {
 		t.Errorf("Mismatching query: %s\n", query)
 	}
 
