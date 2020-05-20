@@ -83,7 +83,11 @@ func (s *PostgresSqlBuilder) Where(params *orderedmap.OrderedMap) *PostgresSqlBu
 }
 
 func (s *PostgresSqlBuilder) WhereArg(param string, value interface{}) *PostgresSqlBuilder {
-	s.whereParams.Set(param, value)
+	if s.whereParams == nil {
+		s.err = errors.New("In this mode usage of WhereArg is not appropriate")
+	} else {
+		s.whereParams.Set(param, value)
+	}
 	return s
 }
 
@@ -93,7 +97,11 @@ func (s *PostgresSqlBuilder) Set(params *orderedmap.OrderedMap) *PostgresSqlBuil
 }
 
 func (s *PostgresSqlBuilder) SetArg(param string, value interface{}) *PostgresSqlBuilder {
-	s.setParams.Set(param, value)
+	if s.setParams == nil {
+		s.err = errors.New("In this mode usage of SetArg is not appropriate")
+	} else {
+		s.setParams.Set(param, value)
+	}
 	return s
 }
 
