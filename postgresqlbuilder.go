@@ -9,19 +9,20 @@ import (
 )
 
 type PostgresSqlBuilder struct {
-	insertFlag      bool
-	updateFlag      bool
-	deleteFlag      bool
-	selectFlag      bool
-	tableName       string
-	setParams       *orderedmap.OrderedMap
-	whereParams     *orderedmap.OrderedMap
-	argumentNames   []string
-	argumentValues  []interface{}
-	returningParams []string
-	limit           int
-	err             error
-	buffer          StringBuilder
+	insertFlag              bool
+	updateFlag              bool
+	deleteFlag              bool
+	selectFlag              bool
+	tableName               string
+	setParams               *orderedmap.OrderedMap
+	whereParams             *orderedmap.OrderedMap
+	whereParamsRelationship *orderedmap.OrderedMap
+	argumentNames           []string
+	argumentValues          []interface{}
+	returningParams         []string
+	limit                   int
+	err                     error
+	buffer                  StringBuilder
 }
 
 // PostgresSqlBuilder ;= PostgresSqlBuilder{}
@@ -32,6 +33,7 @@ func (s *PostgresSqlBuilder) Insert(tableName string) *PostgresSqlBuilder {
 	s.insertFlag = true
 	s.setParams = orderedmap.NewOrderedMap()
 	s.whereParams = orderedmap.NewOrderedMap()
+	s.whereParamsRelationship = orderedmap.NewOrderedMap()
 
 	if len(s.tableName) == 0 {
 		s.err = errors.New("Table name has to be specified")
@@ -44,6 +46,7 @@ func (s *PostgresSqlBuilder) Delete(tableName string) *PostgresSqlBuilder {
 	s.tableName = tableName
 	s.deleteFlag = true
 	s.whereParams = orderedmap.NewOrderedMap()
+	s.whereParamsRelationship = orderedmap.NewOrderedMap()
 
 	if len(s.tableName) == 0 {
 		s.err = errors.New("Table name has to be specified")
@@ -56,6 +59,7 @@ func (s *PostgresSqlBuilder) Update(tableName string) *PostgresSqlBuilder {
 	s.updateFlag = true
 	s.setParams = orderedmap.NewOrderedMap()
 	s.whereParams = orderedmap.NewOrderedMap()
+	s.whereParamsRelationship = orderedmap.NewOrderedMap()
 
 	if len(s.tableName) == 0 {
 		s.err = errors.New("Table name has to be specified")
@@ -69,6 +73,7 @@ func (s *PostgresSqlBuilder) Select(tableName string) *PostgresSqlBuilder {
 	s.tableName = strings.TrimSpace(tableName)
 	s.selectFlag = true
 	s.whereParams = orderedmap.NewOrderedMap()
+	s.whereParamsRelationship = orderedmap.NewOrderedMap()
 
 	if len(s.tableName) == 0 {
 		s.err = errors.New("Table name has to be specified")
@@ -79,6 +84,9 @@ func (s *PostgresSqlBuilder) Select(tableName string) *PostgresSqlBuilder {
 
 func (s *PostgresSqlBuilder) Where(params *orderedmap.OrderedMap) *PostgresSqlBuilder {
 	s.whereParams = params
+	for _, k := range params.Keys() {
+		s.whereParamsRelationship.Set(k, "=")
+	}
 	return s
 }
 
@@ -87,6 +95,21 @@ func (s *PostgresSqlBuilder) WhereArg(param string, value interface{}) *Postgres
 		s.err = errors.New("In this mode usage of WhereArg is not appropriate")
 	} else {
 		s.whereParams.Set(param, value)
+		s.whereParamsRelationship.Set(param, "=")
+	}
+	return s
+}
+
+func (s *PostgresSqlBuilder) WhereArgRelationship(param string, relationship string, value interface{}) *PostgresSqlBuilder {
+	if s.whereParams == nil {
+		s.err = errors.New("In this mode usage of WhereArg is not appropriate")
+	} else {
+		relationship = strings.TrimSpace(relationship)
+		if len(relationship) == 0 {
+			s.err = errors.New("Relationship is not defined")
+		}
+		s.whereParams.Set(param, value)
+		s.whereParamsRelationship.Set(param, relationship)
 	}
 	return s
 }
@@ -187,6 +210,7 @@ func buildWhereClause(s *PostgresSqlBuilder) string {
 	for _, name := range s.whereParams.Keys() {
 		value, ok := s.whereParams.Get(name)
 		if !ok {
+			s.err = errors.New("Incomplete where arguments")
 			continue
 		}
 
@@ -194,7 +218,13 @@ func buildWhereClause(s *PostgresSqlBuilder) string {
 			sb.Write(" AND ")
 		}
 
-		sb.Write(name.(string), "=$", strconv.Itoa(argCount+index))
+		relationship, ok := s.whereParamsRelationship.Get(name.(string))
+		if !ok {
+			s.err = errors.New("Incomplete where relationships")
+			continue
+		}
+
+		sb.Write(name.(string), relationship.(string), "$", strconv.Itoa(argCount+index))
 		s.argumentNames = append(s.argumentNames, name.(string))
 		s.argumentValues = append(s.argumentValues, value)
 		index++
