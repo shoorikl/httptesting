@@ -1,7 +1,9 @@
 package httptesting
 
 import (
+	"database/sql"
 	"errors"
+	"log"
 	"strconv"
 	"strings"
 
@@ -315,4 +317,53 @@ func (s *PostgresSqlBuilder) Build() (string, []interface{}, []string, error) {
 		return "", nil, nil, s.err
 	}
 	return s.buffer.String(), s.argumentValues, s.returningParams, s.err
+}
+
+func ScanOneToMap(rows *sql.Rows) (map[string]interface{}, error) {
+	res, err := ScanToMap(rows, 1)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(res) < 1 {
+		return nil, errors.New("No matches found")
+	}
+	return res[0], nil
+}
+
+func ScanToMap(rows *sql.Rows, limit int) ([]map[string]interface{}, error) {
+	cols, err := rows.Columns()
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([]map[string]interface{}, 0)
+	for rows.Next() {
+		columns := make([]interface{}, len(cols))
+		columnPointers := make([]interface{}, len(cols))
+		for i, _ := range columns {
+			columnPointers[i] = &columns[i]
+		}
+
+		if err := rows.Scan(columnPointers...); err != nil {
+			return nil, err
+		}
+
+		m := make(map[string]interface{})
+		for i, colName := range cols {
+			val := columnPointers[i].(*interface{})
+			m[colName] = *val
+		}
+
+		res = append(res, m)
+		if limit != 0 && len(res) >= limit {
+			break
+		}
+	}
+
+	err = rows.Err()
+	if err != nil {
+		log.Fatal(err)
+	}
+	return res, nil
 }
