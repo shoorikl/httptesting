@@ -105,6 +105,30 @@ func TestSelectStatement(t *testing.T) {
 	t.Logf("In Args: %v\n", inArgs)
 }
 
+func TestSelectOrderByStatement(t *testing.T) {
+	sb := PostgresSqlBuilder{}
+	query, inArgs, outArgs, err := sb.Select("mytable").Returning("firstname", "lastname").WhereArg("customerid", 5).WhereArg("accounttype", "seller").WhereArg("active", true).OrderBy("lastname", "DESC").OrderBy("firstname", "ASC").Build()
+
+	if err != nil {
+		t.Errorf("Cannot create query: %s", err.Error())
+	}
+
+	testquery := "SELECT firstname, lastname FROM mytable WHERE customerid=$1 AND accounttype=$2 AND active=$3 ORDER BY lastname DESC, firstname ASC"
+	if query != testquery {
+		t.Errorf("Mismatching query: %s\n", query)
+	}
+
+	if len(inArgs) != 3 {
+		t.Errorf("Should take 3 value arguments: %v", inArgs)
+	}
+
+	if len(outArgs) != 2 {
+		t.Errorf("Should return 2 parameters: %v", outArgs)
+	}
+
+	t.Logf("In Args: %v\n", inArgs)
+}
+
 func TestSelectStatementWithLimit(t *testing.T) {
 	sb := PostgresSqlBuilder{}
 	query, inArgs, outArgs, err := sb.Select("mytable").Returning("firstname", "lastname").WhereArg("customerid", 5).WhereArg("accounttype", "seller").WhereArg("active", true).Limit(3).Build()

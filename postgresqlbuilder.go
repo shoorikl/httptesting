@@ -19,6 +19,7 @@ type PostgresSqlBuilder struct {
 	setParams               *orderedmap.OrderedMap
 	whereParams             *orderedmap.OrderedMap
 	whereParamsRelationship *orderedmap.OrderedMap
+	orderByParams           *orderedmap.OrderedMap
 	argumentNames           []string
 	argumentValues          []interface{}
 	returningParams         []string
@@ -76,6 +77,7 @@ func (s *PostgresSqlBuilder) Select(tableName string) *PostgresSqlBuilder {
 	s.selectFlag = true
 	s.whereParams = orderedmap.NewOrderedMap()
 	s.whereParamsRelationship = orderedmap.NewOrderedMap()
+	s.orderByParams = orderedmap.NewOrderedMap()
 
 	if len(s.tableName) == 0 {
 		s.err = errors.New("Table name has to be specified")
@@ -104,7 +106,7 @@ func (s *PostgresSqlBuilder) WhereArg(param string, value interface{}) *Postgres
 
 func (s *PostgresSqlBuilder) WhereArgRelationship(param string, relationship string, value interface{}) *PostgresSqlBuilder {
 	if s.whereParams == nil {
-		s.err = errors.New("In this mode usage of WhereArg is not appropriate")
+		s.err = errors.New("In this mode usage of WhereArgRelationship is not appropriate")
 	} else {
 		relationship = strings.TrimSpace(relationship)
 		if len(relationship) == 0 {
@@ -112,6 +114,23 @@ func (s *PostgresSqlBuilder) WhereArgRelationship(param string, relationship str
 		}
 		s.whereParams.Set(param, value)
 		s.whereParamsRelationship.Set(param, relationship)
+	}
+	return s
+}
+
+func (s *PostgresSqlBuilder) OrderBy(param string, direction string) *PostgresSqlBuilder {
+	if s.whereParams == nil || !s.selectFlag {
+		s.err = errors.New("In this mode usage of OrderBy is not appropriate")
+	} else {
+		param = strings.TrimSpace(param)
+		direction = strings.TrimSpace(direction)
+		if len(param) == 0 {
+			s.err = errors.New("OrderBy Param is not defined")
+		}
+		if len(direction) == 0 {
+			s.err = errors.New("OrderBy direction is not defined")
+		}
+		s.orderByParams.Set(param, direction)
 	}
 	return s
 }
@@ -235,6 +254,26 @@ func buildWhereClause(s *PostgresSqlBuilder) string {
 	return sb.String()
 }
 
+func buildOrderByClause(s *PostgresSqlBuilder) string {
+	sb := StringBuilder{}
+	if s.orderByParams.Len() > 0 {
+		sb.Write(" ORDER BY ")
+		for index, name := range s.orderByParams.Keys() {
+			value, ok := s.orderByParams.Get(name)
+			if !ok {
+				s.err = errors.New("Incomplete order by arguments")
+				continue
+			}
+			if index > 0 {
+				sb.Write(", ")
+			}
+			sb.Write(name.(string), " ", value.(string))
+		}
+
+	}
+	return sb.String()
+}
+
 func buildReturnClause(s *PostgresSqlBuilder) string {
 	sb := StringBuilder{}
 
@@ -285,6 +324,7 @@ func (s *PostgresSqlBuilder) Build() (string, []interface{}, []string, error) {
 		s.buffer.Write("SELECT ", buildSelectClause(s), " FROM ", s.tableName, " ")
 		s.buffer.Write("WHERE ")
 		s.buffer.Write(buildWhereClause(s))
+		s.buffer.Write(buildOrderByClause(s))
 		s.buffer.Write(buildLimitClause(s))
 	} else if s.insertFlag {
 		s.buffer.Write("INSERT INTO ", s.tableName, " ")

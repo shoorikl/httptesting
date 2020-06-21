@@ -8,7 +8,6 @@ By design, every endpoint has a mandatory `Status` response filed, which conveys
 
 # Installing
 `go get -u github.com/shoorikl/httptesting`
-`dep ensure -add github.com/shoorikl/httptesting`
 
 In you test package, add
 
@@ -41,6 +40,34 @@ func createRouter() *gin.Engine {
 ```
 
 This will execute a POST call to /echo, and assert the Status field of the response payload. When running `go test`, a `chitchat.md` file will be created with all request-response examples.
+
+There are a couple of utility tools included in this repo. `StringBuilder` is borrowed from another DRY (don't repeat yorself) -- https://github.com/ungerik/go-dry. Since I come from a mixed Java/Node.js background, this tool reminds me of the builder pattern that I learned to enjoy. Here's a usage example:
+
+```go
+sb := StringBuilder{}
+sb.Write("Hello").Write(", ").Write("World!")
+```
+
+Since that repo is no longer maintained, I borrowed that particular piece of code and built a sql builder on top of that. Sql Builder supports only PostgresSQL dialect for the moment, hence the name - `PostgreSqlBuilder`. A limited set of features is supported, you can see that for yourself. One benefit of using a framework like this - is parameter management. 
+
+## SELECT
+
+```go
+	sb := PostgresSqlBuilder{}
+	query, inArgs, outArgs, err := sb.Select("mytable").Returning("firstname", "lastname").WhereArg("customerid", 5).WhereArg("accounttype", "seller").WhereArg("active", true).Limit(3).Build()
+```
+
+This will produce a `query`:
+
+`SELECT firstname, lastname FROM mytable WHERE customerid=$1 AND accounttype=$2 AND active=$3 LIMIT 3`
+
+`inArgs` is map of agrument name to it's value.
+
+## INSERT
+
+## UPDATE
+
+## DELETE
 
 # Outcome
 
