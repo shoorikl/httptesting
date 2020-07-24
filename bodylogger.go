@@ -21,7 +21,8 @@ func (w RequestLogWriter) Write(b []byte) (int, error) {
 
 func BodyLogger(c *gin.Context) {
 	health := strings.Contains(c.Request.URL.RequestURI(), "/healthz")
-	if !health {
+	routeDiscovery := strings.Contains(c.Request.URL.RequestURI(), "/routes")
+	if !health && !routeDiscovery {
 		if "GET" == c.Request.Method {
 			fmt.Printf("\nRequest: %s %s\n", c.Request.Method, c.Request.URL.RequestURI())
 		} else {
@@ -39,7 +40,7 @@ func BodyLogger(c *gin.Context) {
 	c.Writer = blw
 	c.Next()
 
-	if !health {
+	if !health && !routeDiscovery {
 		fmt.Printf("Response: [%d] Body: %s\n", c.Writer.Status(), blw.body.String())
 	}
 }
