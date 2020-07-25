@@ -88,10 +88,10 @@ func MarkdownDebugLogger() gin.HandlerFunc {
 			buf, _ := ioutil.ReadAll(c.Request.Body)
 			reader1 := ioutil.NopCloser(bytes.NewBuffer(buf))
 			reader2 := ioutil.NopCloser(bytes.NewBuffer(buf))
-			requestBody := parseBody(reader1)
+			requestBody := indent(parseBody(reader1))
 
 			if file != nil && len(description) > 0 {
-				file.WriteString(fmt.Sprintf("\n   Request:\n```json\n%s\n```\n", requestBody))
+				file.WriteString(fmt.Sprintf("\n   - Request:\n\t\t```json\n%s\t\t```\n", requestBody))
 			}
 
 			c.Request.Body = reader2
@@ -108,12 +108,13 @@ func MarkdownDebugLogger() gin.HandlerFunc {
 		if err != nil {
 			fmt.Errorf("Unable to parse the json response %d\n", err)
 			if file != nil && len(description) > 0 {
-				file.WriteString(fmt.Sprintf("\n   Response (%d):\n```text\n%s\n```\n", c.Writer.Status(), body))
+				file.WriteString(fmt.Sprintf("\n   - Response (%d):\n\t\t```text\n%s\t\t```\n", c.Writer.Status(), indent(body)))
 			}
 		} else {
 			jsonDoc, _ := json.MarshalIndent(response, "", "\t")
+
 			if file != nil && len(description) > 0 {
-				file.WriteString(fmt.Sprintf("\n   Response (%d):\n```json\n%s\n```\n", c.Writer.Status(), jsonDoc))
+				file.WriteString(fmt.Sprintf("\n   - Response (%d):\n\t\t```json\n%s\t\t```\n", c.Writer.Status(), indent(string(jsonDoc))))
 			}
 		}
 
@@ -124,6 +125,17 @@ func parseBody(reader io.Reader) string {
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(reader)
 	return buf.String()
+}
+
+func indent(body string) string {
+	lines := strings.Split(body, "\n")
+	sb := StringBuilder{}
+	for _, line := range lines {
+		if len(strings.TrimSpace(line)) > 0 {
+			sb.Write("\t\t").Write(line).Write("\n")
+		}
+	}
+	return sb.String()
 }
 
 func PerformRequest(r *gin.Engine, request HttpRequest) *httptest.ResponseRecorder {
