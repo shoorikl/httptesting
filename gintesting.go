@@ -18,13 +18,21 @@ import (
 )
 
 type HttpRequest struct {
-	Method      string
-	Path        string
-	Body        interface{}
-	Payload     string
-	Description string
-	Headers     map[string]string
+	Method            string
+	Path              string
+	Body              interface{}
+	Payload           string
+	Description       string
+	Headers           map[string]string
+	ResponseVariables []ResponseVariable
+	Name              string
 }
+
+type ResponseVariable struct {
+	Variable   string
+	Expression string
+}
+
 type WriterWrapper struct {
 	gin.ResponseWriter
 	Body *bytes.Buffer
@@ -100,6 +108,21 @@ func RegisterMarkdownDebugLogger(r *gin.Engine) {
 func MarkdownDebugLogger() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		description := c.Request.Header["__httptesting_desc"][0]
+		name := c.Request.Header["__httptesting_name"][0]
+		var responseVariables []ResponseVariable
+		if len(c.Request.Header["__httptesting_response_variables"]) > 0 {
+
+			variables := c.Request.Header["__httptesting_response_variables"][0]
+			err := json.Unmarshal([]byte(variables), &responseVariables)
+			if err != nil {
+				fmt.Printf("Cannot parse response variable definitions: %s\n", err.Error())
+			}
+		}
+
+		if len(name) > 0 {
+			name = "@" + name
+		}
+
 		if docFile != nil && len(description) > 0 {
 			url := c.Request.URL.String()
 			for _, p := range c.Params {
@@ -108,7 +131,7 @@ func MarkdownDebugLogger() gin.HandlerFunc {
 
 			if httpFile != nil {
 				httpFile.WriteString("###\n")
-				httpFile.WriteString(fmt.Sprintf("#%s\n", description))
+				httpFile.WriteString(fmt.Sprintf("# %s %s\n", name, description))
 				httpFile.WriteString(fmt.Sprintf("%s {{baseUrl}}%s\n", c.Request.Method, url))
 			}
 
@@ -119,7 +142,7 @@ func MarkdownDebugLogger() gin.HandlerFunc {
 
 				for k, v := range c.Request.Header {
 					for _, v1 := range v {
-						if "__httptesting_desc" != k {
+						if strings.Index(k, "__httptesting") > 0 {
 							docFile.WriteString(fmt.Sprintf("         - `%s`: `%s`\n", k, v1))
 							if httpFile != nil {
 								httpFile.WriteString(fmt.Sprintf("%s: %s\n", k, v1))
@@ -143,8 +166,15 @@ func MarkdownDebugLogger() gin.HandlerFunc {
 
 				c.Request.Body = reader2
 			}
+
 			if httpFile != nil {
 				httpFile.WriteString("\n")
+				if len(responseVariables) > 0 {
+					for _, responseVariable := range responseVariables {
+						httpFile.WriteString(fmt.Sprintf("@%s = {{%s}}\n", responseVariable.Variable, responseVariable.Expression))
+					}
+					httpFile.WriteString("\n")
+				}
 			}
 		}
 
@@ -221,6 +251,13 @@ func PerformRequest(r *gin.Engine, request HttpRequest) *httptest.ResponseRecord
 	req, _ := http.NewRequest(request.Method, request.Path, body)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("__httptesting_desc", request.Description)
+	req.Header.Set("__httptesting_name", request.Name)
+	variables, err := json.Marshal(request.ResponseVariables)
+	if err != nil {
+		fmt.Printf("Failed to serialize variables: %s\n", err.Error())
+	}
+	req.Header.Set("__httptesting_response_variables", string(variables))
+
 	if request.Headers != nil {
 		for k, v := range request.Headers {
 			req.Header.Set(k, v)

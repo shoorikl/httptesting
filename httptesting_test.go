@@ -36,6 +36,13 @@ func TestPOSTRequest(t *testing.T) {
 	AssertResponseStatus(t, w, "HELLO")
 }
 
+func TestPOSTAuthRequest(t *testing.T) {
+
+	req := gin.H{"Status": "HELLO"}
+	w := PerformRequest(r, HttpRequest{Name: "login", Method: "POST", Path: "/login", Description: "Test POST Auth Endpoint", Body: req, Headers: map[string]string{"Token": "123"}, ResponseVariables: []ResponseVariable{{Variable: "authToken", Expression: "login.response.body.AuthToken"}}})
+	AssertResponseStatus(t, w, "HELLO")
+}
+
 func TestGETRouteParamRequest(t *testing.T) {
 
 	w := PerformRequest(r, HttpRequest{Method: "GET", Path: "/param/somevalue", Description: "Test GET Endpoint with route param"})
@@ -80,6 +87,22 @@ func createRouter() *gin.Engine {
 		} else {
 			c.JSON(200, gin.H{
 				"Status": req.Status})
+		}
+	})
+
+	r.POST("/login", func(c *gin.Context) {
+		req := RequestType{}
+
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(500, gin.H{
+				"Status": "Error",
+				"Error":  fmt.Sprintf("%v", err)})
+
+		} else {
+			c.JSON(200, gin.H{
+				"Status":    req.Status,
+				"AuthToken": "token body",
+			})
 		}
 	})
 	return r

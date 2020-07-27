@@ -1,28 +1,32 @@
 @baseUrl = https://www.example.com
 
 ###
-#Test GET Endpoint
+#  Test GET Endpoint
 GET {{baseUrl}}/test
-Content-Type: application/json
 
 ###
-#Test POST Endpoint
+#  Test POST Endpoint
 POST {{baseUrl}}/echo
-Content-Type: application/json
-Token: 123
 {
 	"Status": "HELLO"
 }
 
 ###
-#Test GET Endpoint with route param
-GET {{baseUrl}}/param/:value
-Content-Type: application/json
+# @login Test POST Auth Endpoint
+POST {{baseUrl}}/login
+{
+	"Status": "HELLO"
+}
+
+@authToken = {{login.response.body.AuthToken}}
 
 ###
-#Test PUT Endpoint with route param
+#  Test GET Endpoint with route param
+GET {{baseUrl}}/param/:value
+
+###
+#  Test PUT Endpoint with route param
 PUT {{baseUrl}}/param/:value
-Content-Type: application/json
 {
 	"Status": "HELLO"
 }
