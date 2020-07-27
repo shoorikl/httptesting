@@ -224,13 +224,13 @@ func TestSelectStatementError(t *testing.T) {
 
 func TestInsertStatement(t *testing.T) {
 	sb := PostgresSqlBuilder{}
-	query, inArgs, outArgs, err := sb.Insert("mytable").Returning("id").SetArg("lifetimevalue", 100).SetArg("customerid", 5).SetArg("accounttype", "seller").SetArg("active", true).Build()
+	query, inArgs, outArgs, err := sb.Insert("mytable").Returning("id").SetArg("lifetimevalue", 100).SetArg("customerid", 5).SetArg("accounttype", "seller").SetArg("active", true).SetExplicitArg("geom", "ST_SetSRID(ST_MakePoint(-120, 80), 4326)").Build()
 
 	if err != nil {
 		t.Errorf("Cannot create query: %s", err.Error())
 	}
 
-	if query != "INSERT INTO mytable (lifetimevalue, customerid, accounttype, active) VALUES ($1, $2, $3, $4) RETURNING id" {
+	if query != "INSERT INTO mytable (lifetimevalue, customerid, accounttype, active, geom) VALUES ($1, $2, $3, $4, ST_SetSRID(ST_MakePoint(-120, 80), 4326)) RETURNING id" {
 		t.Errorf("Mismatching query: %s\n", query)
 	}
 

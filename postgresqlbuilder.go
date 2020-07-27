@@ -17,6 +17,7 @@ type PostgresSqlBuilder struct {
 	selectFlag              bool
 	tableName               string
 	setParams               *orderedmap.OrderedMap
+	setExplicitParams       *orderedmap.OrderedMap
 	whereParams             *orderedmap.OrderedMap
 	whereParamsRelationship *orderedmap.OrderedMap
 	orderByParams           *orderedmap.OrderedMap
@@ -35,6 +36,7 @@ func (s *PostgresSqlBuilder) Insert(tableName string) *PostgresSqlBuilder {
 	s.tableName = tableName
 	s.insertFlag = true
 	s.setParams = orderedmap.NewOrderedMap()
+	s.setExplicitParams = orderedmap.NewOrderedMap()
 	s.whereParams = orderedmap.NewOrderedMap()
 	s.whereParamsRelationship = orderedmap.NewOrderedMap()
 
@@ -149,6 +151,15 @@ func (s *PostgresSqlBuilder) SetArg(param string, value interface{}) *PostgresSq
 	return s
 }
 
+func (s *PostgresSqlBuilder) SetExplicitArg(param string, value string) *PostgresSqlBuilder {
+	if s.setExplicitParams == nil {
+		s.err = errors.New("In this mode usage of SetArg is not appropriate")
+	} else {
+		s.setExplicitParams.Set(param, value)
+	}
+	return s
+}
+
 func (s *PostgresSqlBuilder) Returning(params ...string) *PostgresSqlBuilder {
 	s.returningParams = params
 	return s
@@ -184,6 +195,19 @@ func buildValuesClause(s *PostgresSqlBuilder) string {
 		sb1.Write("$", strconv.Itoa(argCount+index))
 		s.argumentNames = append(s.argumentNames, name.(string))
 		s.argumentValues = append(s.argumentValues, value)
+		index++
+	}
+	for _, name := range s.setExplicitParams.Keys() {
+		value, ok := s.setExplicitParams.Get(name)
+		if !ok {
+			continue
+		}
+		if index > 1 {
+			sb.Write(", ")
+			sb1.Write(", ")
+		}
+		sb.Write(name.(string))
+		sb1.Write(value.(string))
 		index++
 	}
 	sb.Write(") ")
