@@ -3,10 +3,15 @@
 ###
 #  Test GET Endpoint
 GET {{baseUrl}}/test
+Content-Type: application/json
+
 
 ###
 #  Test POST Endpoint
 POST {{baseUrl}}/echo
+Content-Type: application/json
+Token: 123
+
 {
 	"Status": "HELLO"
 }
@@ -14,6 +19,9 @@ POST {{baseUrl}}/echo
 ###
 # @login Test POST Auth Endpoint
 POST {{baseUrl}}/login
+Token: 123
+Content-Type: application/json
+
 {
 	"Status": "HELLO"
 }
@@ -23,10 +31,14 @@ POST {{baseUrl}}/login
 ###
 #  Test GET Endpoint with route param
 GET {{baseUrl}}/param/:value
+Content-Type: application/json
+
 
 ###
 #  Test PUT Endpoint with route param
 PUT {{baseUrl}}/param/:value
+Content-Type: application/json
+
 {
 	"Status": "HELLO"
 }

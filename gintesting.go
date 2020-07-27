@@ -142,7 +142,7 @@ func MarkdownDebugLogger() gin.HandlerFunc {
 
 				for k, v := range c.Request.Header {
 					for _, v1 := range v {
-						if strings.Index(k, "__httptesting") > 0 {
+						if strings.Index(k, "__httptesting") != 0 {
 							docFile.WriteString(fmt.Sprintf("         - `%s`: `%s`\n", k, v1))
 							if httpFile != nil {
 								httpFile.WriteString(fmt.Sprintf("%s: %s\n", k, v1))
@@ -150,6 +150,7 @@ func MarkdownDebugLogger() gin.HandlerFunc {
 						}
 					}
 				}
+				httpFile.WriteString("\n")
 			}
 
 			if c.Request.Body != nil {
