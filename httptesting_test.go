@@ -16,7 +16,8 @@ var r = createRouter()
 
 func TestMain(m *testing.M) {
 
-	Prepare("chitchat.md")
+	//Prepare("chitchat.md") // If you only need markdown docs
+	PrepareWithHttpDoc("chitchat.md", "chitchat.http", "https://www.example.com") // If you need markdown docs and the RFC2616 file
 	code := m.Run()
 	Teardown()
 	os.Exit(code)
@@ -49,6 +50,8 @@ func TestPUTRouteParamRequest(t *testing.T) {
 
 func createRouter() *gin.Engine {
 	r := gin.Default()
+	r.Use(Cors())
+	r.Use(BodyLogger())
 	RegisterMarkdownDebugLogger(r)
 
 	r.GET("/test", func(c *gin.Context) {

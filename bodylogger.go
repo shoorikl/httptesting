@@ -19,28 +19,30 @@ func (w RequestLogWriter) Write(b []byte) (int, error) {
 	return w.ResponseWriter.Write(b)
 }
 
-func BodyLogger(c *gin.Context) {
-	health := strings.Contains(c.Request.URL.RequestURI(), "/healthz")
-	routeDiscovery := strings.Contains(c.Request.URL.RequestURI(), "/routes")
-	if !health && !routeDiscovery {
-		if "GET" == c.Request.Method {
-			fmt.Printf("\nRequest: %s %s\n", c.Request.Method, c.Request.URL.RequestURI())
-		} else {
-			var body []byte
-			if c.Request.Body != nil {
-				body, _ = ioutil.ReadAll(c.Request.Body)
+func BodyLogger() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		health := strings.Contains(c.Request.URL.RequestURI(), "/healthz")
+		routeDiscovery := strings.Contains(c.Request.URL.RequestURI(), "/routes")
+		if !health && !routeDiscovery {
+			if "GET" == c.Request.Method {
+				fmt.Printf("\nRequest: %s %s\n", c.Request.Method, c.Request.URL.RequestURI())
+			} else {
+				var body []byte
+				if c.Request.Body != nil {
+					body, _ = ioutil.ReadAll(c.Request.Body)
+				}
+				c.Request.Body = ioutil.NopCloser(bytes.NewBuffer(body))
+
+				fmt.Printf("\nRequest: %s %s Body: %s\n", c.Request.Method, c.Request.URL.RequestURI(), string(body))
 			}
-			c.Request.Body = ioutil.NopCloser(bytes.NewBuffer(body))
-
-			fmt.Printf("\nRequest: %s %s Body: %s\n", c.Request.Method, c.Request.URL.RequestURI(), string(body))
 		}
-	}
 
-	blw := &RequestLogWriter{body: bytes.NewBufferString(""), ResponseWriter: c.Writer}
-	c.Writer = blw
-	c.Next()
+		blw := &RequestLogWriter{body: bytes.NewBufferString(""), ResponseWriter: c.Writer}
+		c.Writer = blw
+		c.Next()
 
-	if !health && !routeDiscovery {
-		fmt.Printf("Response: [%d] Body: %s\n", c.Writer.Status(), blw.body.String())
+		if !health && !routeDiscovery {
+			fmt.Printf("Response: [%d] Body: %s\n", c.Writer.Status(), blw.body.String())
+		}
 	}
 }

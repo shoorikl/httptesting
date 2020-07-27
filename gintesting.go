@@ -35,25 +35,57 @@ func (w WriterWrapper) Write(b []byte) (int, error) {
 	return w.ResponseWriter.Write(b)
 }
 
-var file *os.File
+var docFile *os.File
+var httpFile *os.File
+var baseUrl string
 
-func Prepare(filename string) {
+func Prepare(docFileName string) {
 	// Don't foget to call r.Use(MarkdownDebugLogger())
 
-	if len(strings.TrimSpace(filename)) > 0 {
+	if len(strings.TrimSpace(docFileName)) > 0 {
 		var err error
-		file, err = os.Create(filename)
+		docFile, err = os.Create(docFileName)
 		if err != nil {
-			fmt.Errorf("cannot open %s: %v", filename, err)
+			fmt.Errorf("cannot open %s: %v", docFileName, err)
 		}
 	}
 }
 
+func PrepareWithHttpDoc(docFileName string, httpFileName string, baseUrlParam string) {
+	// Don't foget to call r.Use(MarkdownDebugLogger())
+
+	if len(strings.TrimSpace(docFileName)) > 0 {
+		var err error
+		docFile, err = os.Create(docFileName)
+		if err != nil {
+			fmt.Errorf("cannot open %s: %v", docFileName, err)
+		}
+	}
+
+	if len(strings.TrimSpace(httpFileName)) > 0 {
+		var err error
+		httpFile, err = os.Create(httpFileName)
+		if err != nil {
+			fmt.Errorf("cannot open %s: %v", httpFileName, err)
+		} else {
+			httpFile.WriteString(fmt.Sprintf("@baseUrl = %s\n\n", baseUrlParam))
+		}
+	}
+	baseUrl = baseUrlParam
+}
+
 func Teardown() {
-	if file != nil {
-		err := file.Close()
+	if docFile != nil {
+		err := docFile.Close()
 		if err != nil {
 			fmt.Errorf("cannot close markdown file: %v", err)
+		}
+	}
+
+	if httpFile != nil {
+		err := httpFile.Close()
+		if err != nil {
+			fmt.Errorf("cannot close http file: %v", err)
 		}
 	}
 }
@@ -68,33 +100,52 @@ func RegisterMarkdownDebugLogger(r *gin.Engine) {
 func MarkdownDebugLogger() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		description := c.Request.Header["__httptesting_desc"][0]
-		if file != nil && len(description) > 0 {
+		if docFile != nil && len(description) > 0 {
 			url := c.Request.URL.String()
 			for _, p := range c.Params {
 				url = strings.Replace(url, p.Value, ":"+p.Key, 1)
 			}
 
-			file.WriteString(fmt.Sprintf("\n* %s `%s` %s\n\n", c.Request.Method, url, description))
-			for k, v := range c.Request.Header {
-				for _, v1 := range v {
-					if "__httptesting_desc" != k {
-						file.WriteString(fmt.Sprintf("   - Header: `%s`: `%s`\n", k, v1))
+			if httpFile != nil {
+				httpFile.WriteString("###\n")
+				httpFile.WriteString(fmt.Sprintf("#%s\n", description))
+				httpFile.WriteString(fmt.Sprintf("%s {{baseUrl}}%s\n", c.Request.Method, url))
+			}
+
+			docFile.WriteString(fmt.Sprintf("\n* %s `%s` %s\n\n", c.Request.Method, url, description))
+			docFile.WriteString("   - Request:\n")
+			if len(c.Request.Header) > 0 {
+				docFile.WriteString("      - Headers:\n")
+
+				for k, v := range c.Request.Header {
+					for _, v1 := range v {
+						if "__httptesting_desc" != k {
+							docFile.WriteString(fmt.Sprintf("         - `%s`: `%s`\n", k, v1))
+							if httpFile != nil {
+								httpFile.WriteString(fmt.Sprintf("%s: %s\n", k, v1))
+							}
+						}
 					}
 				}
 			}
-		}
 
-		if c.Request.Body != nil {
-			buf, _ := ioutil.ReadAll(c.Request.Body)
-			reader1 := ioutil.NopCloser(bytes.NewBuffer(buf))
-			reader2 := ioutil.NopCloser(bytes.NewBuffer(buf))
-			requestBody := indent(parseBody(reader1))
+			if c.Request.Body != nil {
+				buf, _ := ioutil.ReadAll(c.Request.Body)
+				reader1 := ioutil.NopCloser(bytes.NewBuffer(buf))
+				reader2 := ioutil.NopCloser(bytes.NewBuffer(buf))
+				body := parseBody(reader1)
+				requestBody := indent(body)
 
-			if file != nil && len(description) > 0 {
-				file.WriteString(fmt.Sprintf("\n   - Request:\n\t\t```json\n%s\t\t```\n", requestBody))
+				docFile.WriteString(fmt.Sprintf("      - Body:\n\t\t```json\n%s\t\t```\n", requestBody))
+				if httpFile != nil {
+					httpFile.WriteString(fmt.Sprintf("%s\n", body))
+				}
+
+				c.Request.Body = reader2
 			}
-
-			c.Request.Body = reader2
+			if httpFile != nil {
+				httpFile.WriteString("\n")
+			}
 		}
 
 		wr := &WriterWrapper{Body: bytes.NewBufferString(""), ResponseWriter: c.Writer}
@@ -104,17 +155,31 @@ func MarkdownDebugLogger() gin.HandlerFunc {
 		var response map[string]interface{}
 		body := wr.Body.String()
 
+		docFile.WriteString(fmt.Sprintf("\n   - Response (%d)\n", c.Writer.Status()))
+
+		if len(c.Writer.Header()) > 0 {
+			docFile.WriteString("      - Headers:\n")
+
+			for k, v := range c.Writer.Header() {
+				for _, v1 := range v {
+					if "__httptesting_desc" != k {
+						docFile.WriteString(fmt.Sprintf("         - `%s`: `%s`\n", k, v1))
+					}
+				}
+			}
+		}
+
 		err := json.Unmarshal([]byte(body), &response)
 		if err != nil {
 			fmt.Errorf("Unable to parse the json response %d\n", err)
-			if file != nil && len(description) > 0 {
-				file.WriteString(fmt.Sprintf("\n   - Response (%d):\n\t\t```text\n%s\t\t```\n", c.Writer.Status(), indent(body)))
+			if docFile != nil && len(description) > 0 {
+				docFile.WriteString(fmt.Sprintf("\n      - Body:\n\t\t```text\n%s\t\t```\n", indent(body)))
 			}
 		} else {
 			jsonDoc, _ := json.MarshalIndent(response, "", "\t")
 
-			if file != nil && len(description) > 0 {
-				file.WriteString(fmt.Sprintf("\n   - Response (%d):\n\t\t```json\n%s\t\t```\n", c.Writer.Status(), indent(string(jsonDoc))))
+			if docFile != nil && len(description) > 0 {
+				docFile.WriteString(fmt.Sprintf("\n      - Body:\n\t\t```json\n%s\t\t```\n", indent(string(jsonDoc))))
 			}
 		}
 
@@ -190,4 +255,20 @@ func AssertResponseStatus(t *testing.T, w *httptest.ResponseRecorder, expectedSt
 		panic(errors.New(errorMessage))
 	}
 	return response
+}
+
+func Cors() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, authorization, content-type, accept, origin, Cache-Control, X-Requested-With, access-control-allow-origin, access-control-allow-credentials, access-control-allow-headers, access-control-allow-methods")
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE")
+
+		if "OPTIONS" == c.Request.Method {
+			c.AbortWithStatus(204)
+			return
+		}
+
+		c.Next()
+	}
 }
