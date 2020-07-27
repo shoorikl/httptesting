@@ -39,13 +39,12 @@ func TestPOSTRequest(t *testing.T) {
 func TestPOSTNamedRequest(t *testing.T) {
 
 	req := gin.H{"Status": "HELLO"}
-	w := PerformRequest(r, HttpRequest{Name: "login", Method: "POST", Path: "/login", Description: "Test POST Auth Endpoint", Body: req, Headers: map[string]string{"Token": "123"}})
-	AssertResponseStatus(t, w, "HELLO")
-}
+	w := PerformRequest(r, HttpRequest{Name: "login", Method: "POST", Path: "/login", Description: "Test POST Auth Endpoint", Body: req})
+	resp := AssertResponseStatus(t, w, "HELLO")
 
-func TestGETRouteParamRequestWithExtractedVariables(t *testing.T) {
+	ExtractVariables(w, []ResponseVariable{{Variable: "authToken", Expression: "login.response.body.AuthToken", Value: resp["AuthToken"]}})
 
-	w := PerformRequest(r, HttpRequest{Method: "GET", Path: "/param/somevalue", Description: "Test GET Endpoint with route param", ResponseVariables: []ResponseVariable{{Variable: "authToken", Expression: "login.response.body.AuthToken"}}})
+	w = PerformRequest(r, HttpRequest{Method: "GET", Path: "/param/somevalue", Description: "Test GET Endpoint with route param", Headers: map[string]string{"Authorization": "Bearer {{authToken}}"}})
 	AssertResponseStatus(t, w, "somevalue")
 }
 
@@ -58,8 +57,8 @@ func TestPUTRouteParamRequest(t *testing.T) {
 func createRouter() *gin.Engine {
 	r := gin.Default()
 	r.Use(Cors())
-	r.Use(BodyLogger())
 	RegisterMarkdownDebugLogger(r)
+	r.Use(BodyLogger())
 
 	r.GET("/test", func(c *gin.Context) {
 		c.JSON(200, gin.H{

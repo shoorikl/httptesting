@@ -9,8 +9,8 @@ Content-Type: application/json
 ###
 # Test POST Endpoint
 POST {{baseUrl}}/echo
-Token: 123
 Content-Type: application/json
+Token: 123
 
 {
 	"Status": "HELLO"
@@ -21,7 +21,6 @@ Content-Type: application/json
 # @name login
 POST {{baseUrl}}/login
 Content-Type: application/json
-Token: 123
 
 {
 	"Status": "HELLO"
@@ -31,8 +30,10 @@ Token: 123
 
 @authToken = {{login.response.body.AuthToken}}
 
+###
 # Test GET Endpoint with route param
 GET {{baseUrl}}/param/:value
+Authorization: Bearer {{authToken}}
 Content-Type: application/json
 
 

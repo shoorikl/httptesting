@@ -7,11 +7,11 @@
 
    - Response (200)
       - Headers:
-         - `Access-Control-Allow-Headers`: `Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, authorization, content-type, accept, origin, Cache-Control, X-Requested-With, access-control-allow-origin, access-control-allow-credentials, access-control-allow-headers, access-control-allow-methods`
          - `Access-Control-Allow-Methods`: `POST, OPTIONS, GET, PUT, DELETE`
          - `Content-Type`: `application/json; charset=utf-8`
          - `Access-Control-Allow-Origin`: `*`
          - `Access-Control-Allow-Credentials`: `true`
+         - `Access-Control-Allow-Headers`: `Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, authorization, content-type, accept, origin, Cache-Control, X-Requested-With, access-control-allow-origin, access-control-allow-credentials, access-control-allow-headers, access-control-allow-methods`
 
       - Body:
 		```json
@@ -24,8 +24,8 @@
 
    - Request:
       - Headers:
-         - `Token`: `123`
          - `Content-Type`: `application/json`
+         - `Token`: `123`
       - Body:
 		```json
 		{
@@ -35,11 +35,11 @@
 
    - Response (200)
       - Headers:
-         - `Access-Control-Allow-Origin`: `*`
-         - `Access-Control-Allow-Credentials`: `true`
          - `Access-Control-Allow-Headers`: `Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, authorization, content-type, accept, origin, Cache-Control, X-Requested-With, access-control-allow-origin, access-control-allow-credentials, access-control-allow-headers, access-control-allow-methods`
          - `Access-Control-Allow-Methods`: `POST, OPTIONS, GET, PUT, DELETE`
          - `Content-Type`: `application/json; charset=utf-8`
+         - `Access-Control-Allow-Origin`: `*`
+         - `Access-Control-Allow-Credentials`: `true`
 
       - Body:
 		```json
@@ -53,7 +53,6 @@
    - Request:
       - Headers:
          - `Content-Type`: `application/json`
-         - `Token`: `123`
       - Body:
 		```json
 		{
@@ -63,11 +62,11 @@
 
    - Response (200)
       - Headers:
-         - `Content-Type`: `application/json; charset=utf-8`
          - `Access-Control-Allow-Origin`: `*`
          - `Access-Control-Allow-Credentials`: `true`
          - `Access-Control-Allow-Headers`: `Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, authorization, content-type, accept, origin, Cache-Control, X-Requested-With, access-control-allow-origin, access-control-allow-credentials, access-control-allow-headers, access-control-allow-methods`
          - `Access-Control-Allow-Methods`: `POST, OPTIONS, GET, PUT, DELETE`
+         - `Content-Type`: `application/json; charset=utf-8`
 
       - Body:
 		```json
@@ -81,6 +80,7 @@
 
    - Request:
       - Headers:
+         - `Authorization`: `Bearer {{authToken}}`
          - `Content-Type`: `application/json`
 
    - Response (200)
@@ -112,11 +112,11 @@
 
    - Response (200)
       - Headers:
-         - `Access-Control-Allow-Origin`: `*`
-         - `Access-Control-Allow-Credentials`: `true`
          - `Access-Control-Allow-Headers`: `Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, authorization, content-type, accept, origin, Cache-Control, X-Requested-With, access-control-allow-origin, access-control-allow-credentials, access-control-allow-headers, access-control-allow-methods`
          - `Access-Control-Allow-Methods`: `POST, OPTIONS, GET, PUT, DELETE`
          - `Content-Type`: `application/json; charset=utf-8`
+         - `Access-Control-Allow-Origin`: `*`
+         - `Access-Control-Allow-Credentials`: `true`
 
       - Body:
 		```json

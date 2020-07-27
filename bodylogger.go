@@ -35,6 +35,13 @@ func BodyLogger() gin.HandlerFunc {
 
 				fmt.Printf("\nRequest: %s %s Body: %s\n", c.Request.Method, c.Request.URL.RequestURI(), string(body))
 			}
+			for name, values := range c.Request.Header {
+				if strings.Index(name, "__httptesting") != 0 {
+					for _, value := range values {
+						fmt.Printf("  * %s=%s\n", name, value)
+					}
+				}
+			}
 		}
 
 		blw := &RequestLogWriter{body: bytes.NewBufferString(""), ResponseWriter: c.Writer}
