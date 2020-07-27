@@ -119,10 +119,6 @@ func MarkdownDebugLogger() gin.HandlerFunc {
 			}
 		}
 
-		if len(name) > 0 {
-			name = "@" + name
-		}
-
 		if docFile != nil && len(description) > 0 {
 			url := c.Request.URL.String()
 			for _, p := range c.Params {
@@ -131,7 +127,19 @@ func MarkdownDebugLogger() gin.HandlerFunc {
 
 			if httpFile != nil {
 				httpFile.WriteString("###\n")
-				httpFile.WriteString(fmt.Sprintf("# %s %s\n", name, description))
+
+				if len(responseVariables) > 0 {
+					httpFile.WriteString("\n")
+					for _, responseVariable := range responseVariables {
+						httpFile.WriteString(fmt.Sprintf("@%s = {{%s}}\n", responseVariable.Variable, responseVariable.Expression))
+					}
+					httpFile.WriteString("\n")
+				}
+
+				httpFile.WriteString(fmt.Sprintf("# %s\n", description))
+				if len(name) > 0 {
+					httpFile.WriteString(fmt.Sprintf("# @name %s\n", name))
+				}
 				httpFile.WriteString(fmt.Sprintf("%s {{baseUrl}}%s\n", c.Request.Method, url))
 			}
 
@@ -170,12 +178,6 @@ func MarkdownDebugLogger() gin.HandlerFunc {
 
 			if httpFile != nil {
 				httpFile.WriteString("\n")
-				if len(responseVariables) > 0 {
-					for _, responseVariable := range responseVariables {
-						httpFile.WriteString(fmt.Sprintf("@%s = {{%s}}\n", responseVariable.Variable, responseVariable.Expression))
-					}
-					httpFile.WriteString("\n")
-				}
 			}
 		}
 

@@ -36,16 +36,16 @@ func TestPOSTRequest(t *testing.T) {
 	AssertResponseStatus(t, w, "HELLO")
 }
 
-func TestPOSTAuthRequest(t *testing.T) {
+func TestPOSTNamedRequest(t *testing.T) {
 
 	req := gin.H{"Status": "HELLO"}
-	w := PerformRequest(r, HttpRequest{Name: "login", Method: "POST", Path: "/login", Description: "Test POST Auth Endpoint", Body: req, Headers: map[string]string{"Token": "123"}, ResponseVariables: []ResponseVariable{{Variable: "authToken", Expression: "login.response.body.AuthToken"}}})
+	w := PerformRequest(r, HttpRequest{Name: "login", Method: "POST", Path: "/login", Description: "Test POST Auth Endpoint", Body: req, Headers: map[string]string{"Token": "123"}})
 	AssertResponseStatus(t, w, "HELLO")
 }
 
-func TestGETRouteParamRequest(t *testing.T) {
+func TestGETRouteParamRequestWithExtractedVariables(t *testing.T) {
 
-	w := PerformRequest(r, HttpRequest{Method: "GET", Path: "/param/somevalue", Description: "Test GET Endpoint with route param"})
+	w := PerformRequest(r, HttpRequest{Method: "GET", Path: "/param/somevalue", Description: "Test GET Endpoint with route param", ResponseVariables: []ResponseVariable{{Variable: "authToken", Expression: "login.response.body.AuthToken"}}})
 	AssertResponseStatus(t, w, "somevalue")
 }
 
