@@ -63,6 +63,7 @@ func (s *PostgresSqlBuilder) Update(tableName string) *PostgresSqlBuilder {
 	s.tableName = tableName
 	s.updateFlag = true
 	s.setParams = orderedmap.NewOrderedMap()
+	s.setExplicitParams = orderedmap.NewOrderedMap()
 	s.whereParams = orderedmap.NewOrderedMap()
 	s.whereParamsRelationship = orderedmap.NewOrderedMap()
 
@@ -153,7 +154,7 @@ func (s *PostgresSqlBuilder) SetArg(param string, value interface{}) *PostgresSq
 
 func (s *PostgresSqlBuilder) SetExplicitArg(param string, value string) *PostgresSqlBuilder {
 	if s.setExplicitParams == nil {
-		s.err = errors.New("In this mode usage of SetArg is not appropriate")
+		s.err = errors.New("In this mode usage of SetExplicitArg is not appropriate")
 	} else {
 		s.setExplicitParams.Set(param, value)
 	}
@@ -239,6 +240,20 @@ func buildSetClause(s *PostgresSqlBuilder) string {
 		s.argumentNames = append(s.argumentNames, name.(string))
 		s.argumentValues = append(s.argumentValues, value)
 		index++
+	}
+	for _, name := range s.setExplicitParams.Keys() {
+		value, ok := s.setExplicitParams.Get(name)
+		if !ok {
+			continue
+		}
+
+		if index > 1 {
+			sb.Write(",")
+		}
+
+		sb.Write(name.(string), "=", value.(string))
+		index++
+
 	}
 	return sb.String()
 }

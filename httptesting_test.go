@@ -247,13 +247,13 @@ func TestInsertStatement(t *testing.T) {
 
 func TestUpdateStatement(t *testing.T) {
 	sb := PostgresSqlBuilder{}
-	query, inArgs, outArgs, err := sb.Update("mytable").Returning("id").SetArg("lifetimevalue", 100).SetArg("active", false).WhereArg("customerid", 5).WhereArg("accounttype", "seller").WhereArg("active", true).Build()
+	query, inArgs, outArgs, err := sb.Update("mytable").Returning("id").SetArg("lifetimevalue", 100).SetArg("active", false).SetExplicitArg("geom", "ST_SetSRID(ST_MakePoint(-120, 80), 4326)").WhereArg("customerid", 5).WhereArg("accounttype", "seller").WhereArg("active", true).Build()
 
 	if err != nil {
 		t.Errorf("Cannot create query: %s", err.Error())
 	}
 
-	if query != "UPDATE mytable SET lifetimevalue=$1,active=$2 WHERE customerid=$3 AND accounttype=$4 AND active=$5 RETURNING id" {
+	if query != "UPDATE mytable SET lifetimevalue=$1,active=$2,geom=ST_SetSRID(ST_MakePoint(-120, 80), 4326) WHERE customerid=$3 AND accounttype=$4 AND active=$5 RETURNING id" {
 		t.Errorf("Mismatching query: %s\n", query)
 	}
 
