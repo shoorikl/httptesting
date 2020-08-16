@@ -9,8 +9,8 @@ Content-Type: application/json
 ###
 # Test POST Endpoint
 POST {{baseUrl}}/echo
-Token: 123
 Content-Type: application/json
+Token: 123
 
 {
 	"Status": "HELLO"

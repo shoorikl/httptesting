@@ -13,6 +13,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/hoisie/mustache"
@@ -240,6 +241,7 @@ func indent(body string) string {
 	return sb.String()
 }
 
+// Makes a call to a url exposed by a Gin engine, logging request and a response
 func PerformRequest(r *gin.Engine, request HttpRequest) *httptest.ResponseRecorder {
 	var body io.Reader = nil
 	if "GET" != request.Method {
@@ -270,6 +272,49 @@ func PerformRequest(r *gin.Engine, request HttpRequest) *httptest.ResponseRecord
 	r.ServeHTTP(w, req)
 
 	return w
+}
+
+// Makes a call to a fully qualified remote url
+func PerformRemoteRequest(request HttpRequest) ([]byte, error) {
+	var body io.Reader = nil
+	if "GET" != request.Method {
+		if request.Body != nil {
+			jsonDoc, err := json.MarshalIndent(request.Body, "", "\t")
+			if err != nil {
+				fmt.Printf("Error: %s\n", err.Error())
+				return nil, err
+			}
+			body = bytes.NewBuffer(jsonDoc)
+
+		} else if len(request.Payload) > 0 {
+			body = bytes.NewBuffer([]byte(request.Payload))
+		}
+	}
+
+	req, _ := http.NewRequest(request.Method, request.Path, body)
+	req.Header.Set("Content-Type", "application/json")
+
+	if request.Headers != nil {
+		for k, v := range request.Headers {
+			req.Header.Set(k, v)
+		}
+	}
+
+	client := http.Client{Timeout: time.Second * 10}
+	res, err := client.Do(req)
+	if err != nil {
+		fmt.Printf("Error: %s\n", err.Error())
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	bodyBytes, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		fmt.Printf("Error: %s\n", err.Error())
+		return nil, err
+	}
+
+	return bodyBytes, nil
 }
 
 func AssertStatusCode(t *testing.T, w *httptest.ResponseRecorder, expectedStatusCode int) {
