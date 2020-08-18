@@ -111,3 +111,15 @@ func CreatePayloadField(payload map[string]interface{}) string {
 	}
 	return string(jsonPayload)
 }
+
+// ExtractPayloadNumericField extract a field from a json JWT claim payload
+func ExtractPayloadNumericField(claims jwt.MapClaims, field string) float64 {
+	if claims["payload"] == nil {
+		return 0.0
+	}
+	payloadJSON := claims["payload"].(string)
+	var payload map[string]interface{}
+	json.Unmarshal([]byte(payloadJSON), &payload)
+	value := payload[field].(float64)
+	return value
+}
