@@ -19,6 +19,16 @@ func (w RequestLogWriter) Write(b []byte) (int, error) {
 	return w.ResponseWriter.Write(b)
 }
 
+func SwaggerLimiter() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if strings.Contains(c.Request.URL.RequestURI(), "/swagger") {
+			fmt.Printf("Swagger url %s accessed from %s\n", c.Request.URL, c.ClientIP())
+			// c.AbortWithError(http.StatusUnauthorized, errors.New("You're not allowed to access this endpoint"))
+			// return
+		}
+	}
+}
+
 func BodyLogger() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		health := strings.Contains(c.Request.URL.RequestURI(), "/healthz")
@@ -49,7 +59,21 @@ func BodyLogger() gin.HandlerFunc {
 		c.Next()
 
 		if !health && !routeDiscovery {
-			fmt.Printf("Response: [%d] Body: %s\n", c.Writer.Status(), blw.body.String())
+			contentType, found := blw.Header()["Content-Type"]
+			if found && len(contentType) > 0 {
+				if strings.Contains(contentType[0], "application/json") {
+					fmt.Printf("Response: [%d] Body: %s\n", c.Writer.Status(), blw.body.String())
+
+					for name, values := range blw.Header() {
+						for _, value := range values {
+							fmt.Printf("  * %s=%s\n", name, value)
+						}
+					}
+
+				} else {
+					fmt.Printf("Non-json response\n")
+				}
+			}
 		}
 	}
 }
