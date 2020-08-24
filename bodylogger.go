@@ -2,8 +2,12 @@ package httptesting
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io/ioutil"
+	"net"
+	"net/http"
+	"os"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -19,12 +23,36 @@ func (w RequestLogWriter) Write(b []byte) (int, error) {
 	return w.ResponseWriter.Write(b)
 }
 
+var whitelistedIps = getWhitelistedIps()
+
+func getWhitelistedIps() map[string]bool {
+	whitelistedIps := make(map[string]bool)
+
+	whitelist := os.Getenv("SWAGGER_WHITELIST")
+	if len(whitelist) == 0 {
+		whitelistedIps["*"] = true
+	} else {
+		ips := strings.Split(whitelist, ",")
+		for _, ip := range ips {
+			whitelistedIps[ip] = true
+		}
+	}
+	return whitelistedIps
+}
+
 func SwaggerLimiter() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if strings.Contains(c.Request.URL.RequestURI(), "/swagger") {
-			fmt.Printf("Swagger url %s accessed from %s\n", c.Request.URL, c.ClientIP())
-			// c.AbortWithError(http.StatusUnauthorized, errors.New("You're not allowed to access this endpoint"))
-			// return
+		if strings.Contains(c.Request.URL.RequestURI(), "/swagger.json") {
+			remoteAddr, _, _ := net.SplitHostPort(c.Request.RemoteAddr)
+
+			fmt.Printf("Swagger url %s accessed from %s\n", c.Request.URL, remoteAddr)
+
+			if _, ok := whitelistedIps["*"]; !ok {
+				if _, ok := whitelistedIps[remoteAddr]; !ok {
+					c.AbortWithError(http.StatusUnauthorized, errors.New("You're not allowed to access this endpoint"))
+					return
+				}
+			}
 		}
 	}
 }
