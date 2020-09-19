@@ -98,7 +98,7 @@ func (s *PostgresSqlBuilder) Where(params *orderedmap.OrderedMap) *PostgresSqlBu
 }
 
 func (s *PostgresSqlBuilder) WhereArg(param string, value interface{}) *PostgresSqlBuilder {
-	if s.whereParams == nil {
+	if s.whereParams == nil || s.whereParamsRelationship == nil {
 		s.err = errors.New("In this mode usage of WhereArg is not appropriate")
 	} else {
 		s.whereParams.Set(param, value)
@@ -107,8 +107,17 @@ func (s *PostgresSqlBuilder) WhereArg(param string, value interface{}) *Postgres
 	return s
 }
 
+func (s *PostgresSqlBuilder) All() *PostgresSqlBuilder {
+	if s.whereParams == nil || s.whereParamsRelationship == nil {
+		s.err = errors.New("In this mode usage of All is not appropriate")
+	} else {
+		s.whereParamsRelationship.Set("*", "*")
+	}
+	return s
+}
+
 func (s *PostgresSqlBuilder) WhereArgRelationship(param string, relationship string, value interface{}) *PostgresSqlBuilder {
-	if s.whereParams == nil {
+	if s.whereParams == nil || s.whereParamsRelationship == nil {
 		s.err = errors.New("In this mode usage of WhereArgRelationship is not appropriate")
 	} else {
 		relationship = strings.TrimSpace(relationship)
@@ -260,6 +269,15 @@ func buildSetClause(s *PostgresSqlBuilder) string {
 
 func buildWhereClause(s *PostgresSqlBuilder) string {
 	sb := StringBuilder{}
+
+	if val, ok := s.whereParamsRelationship.Get("*"); ok {
+		// Returning all matches, as .All() was applied, all other constraints will be ignored
+		if val != "*" {
+			s.err = errors.New(".All() was not properly applied")
+		}
+		sb.Write("1=1")
+		return sb.String()
+	}
 
 	if s.whereParams.Len() == 0 {
 		s.err = errors.New("Where clause has to be specified")
