@@ -57,15 +57,15 @@ func verifyAuthorizationToken(token string) (valid bool, claims jwt.MapClaims) {
 		return false, nil
 	}
 
-	if !jwtToken.Valid {
-		fmt.Printf("Error: JWT Token is not valid\n")
-		return false, nil
-	}
-
 	claims, ok := jwtToken.Claims.(jwt.MapClaims)
 	if !ok {
 		fmt.Printf("Error: No valid calaims found in JWT token\n")
 		return false, nil
+	}
+
+	if !jwtToken.Valid {
+		fmt.Printf("Error: JWT Token is not valid\n")
+		return false, claims
 	}
 
 	return true, claims
@@ -78,10 +78,10 @@ func VerifyAuthorization(c *gin.Context) (valid bool, token string, claims jwt.M
 		token := strings.Replace(authorizationHeader, "Bearer ", "", 1)
 		valid, claims := verifyAuthorizationToken(token)
 		if !valid {
-			return false, "", nil
+			return false, token, claims
 		} else {
 			if false == claims["authorized"].(bool) {
-				return false, "", nil
+				return false, token, claims
 			} else {
 				return true, token, claims
 			}
