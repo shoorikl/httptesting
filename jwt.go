@@ -53,6 +53,10 @@ func verifyAuthorizationToken(token string) (valid bool, claims jwt.MapClaims) {
 	jwtToken, err := verifyToken(token)
 
 	if err != nil {
+		return false, nil
+	}
+
+	if err != nil {
 		fmt.Printf("Error: Error validating JWT token: %s\n", err.Error())
 		return false, nil
 	}
