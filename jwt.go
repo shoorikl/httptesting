@@ -80,7 +80,7 @@ func VerifyAuthorization(c *gin.Context) (valid bool, token string, claims jwt.M
 	if len(c.Request.Header["Authorization"]) > 0 {
 		authorizationHeader := c.Request.Header["Authorization"][0]
 		token := strings.Replace(authorizationHeader, "Bearer ", "", 1)
-		valid, claims := verifyAuthorizationToken(token)
+		valid, claims := VerifyAuthorizationToken(token)
 		if !valid {
 			return false, token, claims
 		} else {
