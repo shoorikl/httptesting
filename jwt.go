@@ -49,7 +49,7 @@ func verifyToken(token string) (*jwt.Token, error) {
 	return jwtToken, nil
 }
 
-func verifyAuthorizationToken(token string) (valid bool, claims jwt.MapClaims) {
+func VerifyAuthorizationToken(token string) (valid bool, claims jwt.MapClaims) {
 	jwtToken, err := verifyToken(token)
 
 	if err != nil {
