@@ -61,7 +61,11 @@ func BodyLogger() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		health := strings.Contains(c.Request.URL.RequestURI(), "/healthz")
 		routeDiscovery := strings.Contains(c.Request.URL.RequestURI(), "/routes")
-		if !health && !routeDiscovery {
+		graphQlPlayground := strings.Contains(c.Request.URL.RequestURI(), "/graphql")
+		graphQlQuery := strings.Contains(c.Request.URL.RequestURI(), "/query")
+
+		logRequest := !health && !routeDiscovery && !graphQlPlayground && !graphQlQuery
+		if logRequest {
 			if "GET" == c.Request.Method {
 				fmt.Printf("\nRequest: %s %s\n", c.Request.Method, c.Request.URL.RequestURI())
 			} else {
@@ -86,7 +90,7 @@ func BodyLogger() gin.HandlerFunc {
 		c.Writer = blw
 		c.Next()
 
-		if !health && !routeDiscovery {
+		if logRequest {
 			contentType, found := blw.Header()["Content-Type"]
 			if found && len(contentType) > 0 {
 				if strings.Contains(contentType[0], "application/json") {
