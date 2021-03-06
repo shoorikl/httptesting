@@ -223,6 +223,29 @@ func TestSelectStatementWithAll(t *testing.T) {
 	t.Logf("In Args: %v\n", inArgs)
 }
 
+func TestSelectStatementWithJoin(t *testing.T) {
+	sb := PostgresSqlBuilder{}
+	query, inArgs, outArgs, err := sb.Select("mytable").Returning("mytable.firstname", "mytable.lastname").Join("left outer join mytable1 on mytable1.id=mytable.userid").All().Limit(3).Build()
+
+	if err != nil {
+		t.Errorf("Cannot create query: %s", err.Error())
+	}
+
+	if query != "SELECT mytable.firstname, mytable.lastname FROM mytable left outer join mytable1 on mytable1.id=mytable.userid WHERE 1=1 LIMIT 3" {
+		t.Errorf("Mismatching query: %s\n", query)
+	}
+
+	if len(inArgs) != 0 {
+		t.Errorf("Should take 3 value arguments: %v", inArgs)
+	}
+
+	if len(outArgs) != 2 {
+		t.Errorf("Should return 2 parameters: %v", outArgs)
+	}
+
+	t.Logf("In Args: %v\n", inArgs)
+}
+
 func TestSelectStatementError(t *testing.T) {
 	sb := PostgresSqlBuilder{}
 	_, _, _, err := sb.Select("").Returning("firstname", "lastname").WhereArg("customerid", 5).WhereArg("accounttype", "seller").WhereArg("active", true).Build()

@@ -21,6 +21,7 @@ type PostgresSqlBuilder struct {
 	whereParams             *orderedmap.OrderedMap
 	whereParamsRelationship *orderedmap.OrderedMap
 	orderByParams           *orderedmap.OrderedMap
+	joinStatement           string
 	argumentNames           []string
 	argumentValues          []interface{}
 	returningParams         []string
@@ -86,6 +87,11 @@ func (s *PostgresSqlBuilder) Select(tableName string) *PostgresSqlBuilder {
 		s.err = errors.New("Table name has to be specified")
 	}
 
+	return s
+}
+
+func (s *PostgresSqlBuilder) Join(joinStatement string) *PostgresSqlBuilder {
+	s.joinStatement = joinStatement
 	return s
 }
 
@@ -311,6 +317,16 @@ func buildWhereClause(s *PostgresSqlBuilder) string {
 	return sb.String()
 }
 
+func buildJoin(s *PostgresSqlBuilder) string {
+	sb := StringBuilder{}
+
+	if len(s.joinStatement) > 0 {
+		sb.Write(s.joinStatement).Write(" ")
+	}
+
+	return sb.String()
+}
+
 func buildOrderByClause(s *PostgresSqlBuilder) string {
 	sb := StringBuilder{}
 	if s.orderByParams.Len() > 0 {
@@ -379,6 +395,7 @@ func buildLimitClause(s *PostgresSqlBuilder) string {
 func (s *PostgresSqlBuilder) Build() (string, []interface{}, []string, error) {
 	if s.selectFlag {
 		s.buffer.Write("SELECT ", buildSelectClause(s), " FROM ", s.tableName, " ")
+		s.buffer.Write(buildJoin(s))
 		s.buffer.Write("WHERE ")
 		s.buffer.Write(buildWhereClause(s))
 		s.buffer.Write(buildOrderByClause(s))
