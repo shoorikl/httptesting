@@ -4,7 +4,7 @@ Restful API markdown logging middleware for Golang Gin http routing framework.
 
 # Conventions
 
-By design, every endpoint has a mandatory `Status` response filed, which conveys granular details about the outcome of a call. In case of an error, in addition of HTTP 500, a field called `Error` is expected to be returned. In case of a success, in addition to the HTTP 200, `Status` could contian information like `Inserted`, `Deleted`, etc. This is ultimately a semantic confirmation.
+By design, every endpoint has a mandatory `Status` response filed, which conveys granular details about the outcome of a call. In case of an error, in addition of HTTP 500, a field called `Error` is expected to be returned. In case of a success, in addition to the HTTP 200, `Status` could contain information like `Inserted`, `Deleted`, etc. This is ultimately a semantic confirmation.
 
 # Installing
 `go get -u github.com/shoorikl/httptesting`
