@@ -63,8 +63,9 @@ func BodyLogger() gin.HandlerFunc {
 		routeDiscovery := strings.Contains(c.Request.URL.RequestURI(), "/routes")
 		graphQlPlayground := strings.Contains(c.Request.URL.RequestURI(), "/graphql")
 		graphQlQuery := strings.Contains(c.Request.URL.RequestURI(), "/query")
+		rootQuery := c.Request.URL.RequestURI() == "/"
 
-		logRequest := !health && !routeDiscovery && !graphQlPlayground && !graphQlQuery
+		logRequest := !health && !routeDiscovery && !graphQlPlayground && !graphQlQuery && !rootQuery
 		if logRequest {
 			if "GET" == c.Request.Method {
 				fmt.Printf("\nRequest: %s %s\n", c.Request.Method, c.Request.URL.RequestURI())
